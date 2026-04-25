@@ -1,0 +1,3532 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>נתוני קצבאות באשכול גליל מזרחי ומערבי</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js & DataLabels -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    <style>
+        :root {
+            --primary: #0F172A; /* Used for header/black theme matching the logo */
+            --secondary: #3B82F6;
+            --accent: #10B981;
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text-main: #334155;
+            --text-light: #64748B;
+            --border: #E2E8F0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Heebo', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        header {
+            background: #000000; /* Black to match logo */
+            color: white;
+            padding: 2rem 0;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .header-logo {
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #94A3B8;
+            font-weight: 300;
+        }
+
+        /* Controls */
+        .controls-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .toggle-group {
+            display: flex;
+            background: #F1F5F9;
+            border-radius: 8px;
+            padding: 0.25rem;
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-light);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-item label {
+            font-weight: 500;
+        }
+
+        select {
+            appearance: none;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            color: var(--text-main);
+            outline: none;
+            cursor: pointer;
+            transition: var(--transition);
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: left 1rem center;
+            background-size: 1em;
+            min-width: 200px;
+        }
+
+        select:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Chart Area */
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .chart-stat {
+            background: #EFF6FF;
+            color: var(--secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .canvas-container {
+            position: relative;
+            height: 500px;
+            width: 100%;
+        }
+
+        /* Table */
+        .table-container {
+            margin-top: 2rem;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+        
+        thead {
+            background-color: #F8FAFC;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        th, td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        tbody tr:hover {
+            background-color: #F1F5F9;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        .source-tag {
+            display: inline-block;
+            background: #E2E8F0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-content">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAACUQAAAKRCAYAAACWMjGCAAAACXBIWXMAAC4jAAAuIwF4pT92AAAgAElEQVR4nOzdT4wkWXoQ8K/bY69t2XSLPxKWU3SunHCy1O0LiFPn5gFx67Zkce1auDO5SL6yNRwQEhLbe0HcNkdw4uIecUTKzb6hOrDTkm18SETWOllWMktNsQbvH5nmkFHj2pqu6swXkfEiXvx+0mjU3fVFflmR+V68F1+8d+/t27cBAAAAAAAAAABQgvu5EwAAAAAAAAAAAGiKgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGIoiAIAAAAAAAAAAIqhIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGIoiAIAAAAAAAAAAIqhIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGIoiAIAAAAAAAAAAIqhIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGIoiAIAAAAAAAAAAIqhIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGIoiAIAAAAAAAAAAIqhIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGJ8kDsBAAAAAAAAAKAb/uo/+Gdvc+fQY6//57//p9PcSQBWiAIAAAAAAAAAAAqiIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGIoiAIAAAAAAAAAAIqhIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGIoiAIAAAAAAAAAAIqhIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGIoiAIAAAAAAAAAAIqhIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAAiqEgCgAAAAAAAAAAKIaCKAAAAAAAAAAAoBgKogAAAAAAAAAAgGIoiAIAAAAAAAAAAIqhIAoAAAAAAAAAACiGgigAAAAAAAAAAKAYCqIAAAAAAAAAAIBiKIgCAAAAAAAAAACKoSAKAAAAAAAAAAAohoIoAAAAAAAAAACgGAqiAAAAAAAAAACAYiiIAgAAAAAAAAAA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" alt="לוגו מרכז הידע" class="header-logo" />
+            <div>
+                <h1 id="page-title">נתוני קצבאות באשכול גליל מזרחי ומערבי</h1>
+                <div class="subtitle">השוואות וניתוחי עומק - המוסד לביטוח לאומי 2024</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <div class="controls-card fade-in">
+            <div class="toggle-group">
+                <button class="toggle-btn active" id="btn-cluster" onclick="switchView('cluster')">תמונה אשכולית</button>
+                <button class="toggle-btn" id="btn-auth" onclick="switchView('auth')">תמונה רשותית</button>
+            </div>
+            
+            <div class="filters-row">
+                <!-- Shared Region Filter -->
+                <div class="filter-item">
+                    <label for="region-select">בחירת אשכול גיאוגרפי:</label>
+                    <select id="region-select" onchange="onRegionChange()">
+                        <option value="גליל מזרחי">גליל מזרחי</option>
+                        <option value="גליל מערבי">גליל מערבי</option>
+                    </select>
+                </div>
+                
+                <!-- Cluster View Filters -->
+                <div id="filter-cluster-view" class="filter-item">
+                    <label for="benefit-select">בחר קצבה:</label>
+                    <select id="benefit-select" onchange="renderClusterView()"></select>
+                </div>
+                
+                <!-- Authority View Filters -->
+                <div id="filter-auth-view" class="filter-item hidden">
+                    <label for="auth-select">בחר רשות:</label>
+                    <select id="auth-select" onchange="renderAuthView()"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card fade-in" style="animation-delay: 0.1s;">
+            <div class="chart-header">
+                <div class="chart-title" id="chart-title">טוען נתונים...</div>
+                <div class="chart-stat" id="chart-stat"></div>
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="mainChart"></canvas>
+            </div>
+            
+            <!-- Raw Data Table -->
+            <div class="table-container fade-in hidden" id="data-table-wrapper">
+                <table id="data-table">
+                    <thead id="data-table-head"></thead>
+                    <tbody id="data-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>העיבוד בוצע על ידי מרכז ידע אזורי גליל מזרחי ומערבי</p>
+            <div class="source-tag">מקור: המוסד לביטוח לאומי (נכון לדצמבר 2024)</div>
+        </div>
+    </footer>
+
+    <script>
+        // Register DataLabels plugin
+        Chart.register(ChartDataLabels);
+        
+        // Data injected from Python pipeline
+        const APP_DATA = {
+  "metrics": [
+    "תושבים 0-17",
+    "תושבים 18-64",
+    "תושבים 65+",
+    "זקנה ושאירים - כלל המקבלים",
+    "זקנה ושאירים - קצבה עם השלמת הכנסה",
+    "זקנה ושאירים - קצבת זקנה בלבד",
+    "גמלת סיעוד",
+    "נכות כללית",
+    "שירותים מיוחדים",
+    "גמלת ילד נכה",
+    "ניידות",
+    "נפגעי עבודה - קצבת נכות ותלויים",
+    "נפגעי עבודה - דמי פגיעה",
+    "קצבת ילדים - מספר משפחות",
+    "קצבת ילדים - מספר ילדים",
+    "קצבת ילדים - משפחות עם 4+ ילדים",
+    "דמי לידה",
+    "מזונות",
+    "הבטחת הכנסה",
+    "אבטלה"
+  ],
+  "authorities": [
+    {
+      "region": "גליל מערבי",
+      "targetName": "אבו סנאן",
+      "btlName": "אבו סנאן",
+      "cluster": 3,
+      "population": 14502,
+      "values": {
+        "תושבים 0-17": 0.283133,
+        "תושבים 18-64": 0.636809,
+        "תושבים 65+": 0.080058,
+        "זקנה ושאירים - כלל המקבלים": 0.075921,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.018549,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.057302,
+        "גמלת סיעוד": 0.026272,
+        "נכות כללית": 0.049786,
+        "שירותים מיוחדים": 0.016274,
+        "גמלת ילד נכה": 0.008344,
+        "ניידות": 0.008688,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009378,
+        "נפגעי עבודה - דמי פגיעה": 0.001103,
+        "קצבת ילדים - מספר משפחות": 0.134326,
+        "קצבת ילדים - מספר ילדים": 0.277755,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.011585,
+        "דמי לידה": 0.000759,
+        "מזונות": 0.001862,
+        "הבטחת הכנסה": 0.012688,
+        "אבטלה": 0.010205
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": -12.4,
+        "תושבים 18-64": 5.1,
+        "תושבים 65+": 12.5,
+        "זקנה ושאירים - כלל המקבלים": 11.8,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -13.2,
+        "זקנה ושאירים - קצבת זקנה בלבד": 7.7,
+        "גמלת סיעוד": -26.0,
+        "נכות כללית": 5.7,
+        "שירותים מיוחדים": 18.4,
+        "גמלת ילד נכה": -33.7,
+        "ניידות": 32.0,
+        "נפגעי עבודה - קצבת נכות ותלויים": 4.1,
+        "נפגעי עבודה - דמי פגיעה": -10.3,
+        "קצבת ילדים - מספר משפחות": -4.1,
+        "קצבת ילדים - מספר ילדים": -12.9,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -41.1,
+        "דמי לידה": -28.9,
+        "מזונות": 1.9,
+        "הבטחת הכנסה": 35.9,
+        "אבטלה": 11.2
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "בוקעתא",
+      "btlName": "בוקעאתא",
+      "cluster": 3,
+      "population": 7024,
+      "values": {
+        "תושבים 0-17": 0.273776,
+        "תושבים 18-64": 0.645359,
+        "תושבים 65+": 0.080866,
+        "זקנה ושאירים - כלל המקבלים": 0.072466,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.028189,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.052534,
+        "גמלת סיעוד": 0.039721,
+        "נכות כללית": 0.050683,
+        "שירותים מיוחדים": 0.014237,
+        "גמלת ילד נכה": 0.007973,
+        "ניידות": 0.005695,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.004271,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.149345,
+        "קצבת ילדים - מספר ילדים": 0.276481,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.003559,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.013098,
+        "אבטלה": 0.012528
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": -15.3,
+        "תושבים 18-64": 6.5,
+        "תושבים 65+": 13.6,
+        "זקנה ושאירים - כלל המקבלים": 6.7,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 31.9,
+        "זקנה ושאירים - קצבת זקנה בלבד": -1.3,
+        "גמלת סיעוד": 11.8,
+        "נכות כללית": 7.6,
+        "שירותים מיוחדים": 3.6,
+        "גמלת ילד נכה": -36.6,
+        "ניידות": -13.5,
+        "נפגעי עבודה - קצבת נכות ותלויים": -52.6,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 6.6,
+        "קצבת ילדים - מספר ילדים": -13.3,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -81.9,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 40.3,
+        "אבטלה": 36.5
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "בית ג'ן",
+      "btlName": "בית ג'ן",
+      "cluster": 4,
+      "population": 12896,
+      "values": {
+        "תושבים 0-17": 0.266672,
+        "תושבים 18-64": 0.648263,
+        "תושבים 65+": 0.085065,
+        "זקנה ושאירים - כלל המקבלים": 0.08429,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.013958,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.066765,
+        "גמלת סיעוד": 0.046526,
+        "נכות כללית": 0.044122,
+        "שירותים מיוחדים": 0.011787,
+        "גמלת ילד נכה": 0.007677,
+        "ניידות": 0.005971,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008607,
+        "נפגעי עבודה - דמי פגיעה": 0.001861,
+        "קצבת ילדים - מספר משפחות": 0.13919,
+        "קצבת ילדים - מספר ילדים": 0.266594,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.006359,
+        "דמי לידה": null,
+        "מזונות": 0.001008,
+        "הבטחת הכנסה": 0.008065,
+        "אבטלה": 0.009228
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.320464,
+        "תושבים 18-64": 0.586191,
+        "תושבים 65+": 0.093344,
+        "זקנה ושאירים - כלל המקבלים": 0.089803,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.020161,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.078107,
+        "גמלת סיעוד": 0.038687,
+        "נכות כללית": 0.043003,
+        "שירותים מיוחדים": 0.011878,
+        "גמלת ילד נכה": 0.014616,
+        "ניידות": 0.006164,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009623,
+        "נפגעי עבודה - דמי פגיעה": 0.001098,
+        "קצבת ילדים - מספר משפחות": 0.137567,
+        "קצבת ילדים - מספר ילדים": 0.318446,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.020566,
+        "דמי לידה": 0.001299,
+        "מזונות": 0.001887,
+        "הבטחת הכנסה": 0.008783,
+        "אבטלה": 0.009635
+      },
+      "pctDiff": {
+        "תושבים 0-17": -16.8,
+        "תושבים 18-64": 10.6,
+        "תושבים 65+": -8.9,
+        "זקנה ושאירים - כלל המקבלים": -6.1,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -30.8,
+        "זקנה ושאירים - קצבת זקנה בלבד": -14.5,
+        "גמלת סיעוד": 20.3,
+        "נכות כללית": 2.6,
+        "שירותים מיוחדים": -0.8,
+        "גמלת ילד נכה": -47.5,
+        "ניידות": -3.1,
+        "נפגעי עבודה - קצבת נכות ותלויים": -10.6,
+        "נפגעי עבודה - דמי פגיעה": 69.5,
+        "קצבת ילדים - מספר משפחות": 1.2,
+        "קצבת ילדים - מספר ילדים": -16.3,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -69.1,
+        "דמי לידה": null,
+        "מזונות": -46.6,
+        "הבטחת הכנסה": -8.2,
+        "אבטלה": -4.2
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "ג'דיידה מכר",
+      "btlName": "ג'דיידה-מכר",
+      "cluster": 3,
+      "population": 21134,
+      "values": {
+        "תושבים 0-17": 0.27955,
+        "תושבים 18-64": 0.650894,
+        "תושבים 65+": 0.069556,
+        "זקנה ושאירים - כלל המקבלים": 0.067758,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.022476,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.048595,
+        "גמלת סיעוד": 0.026923,
+        "נכות כללית": 0.046323,
+        "שירותים מיוחדים": 0.014621,
+        "גמלת ילד נכה": 0.008375,
+        "ניידות": 0.006672,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.011451,
+        "נפגעי עבודה - דמי פגיעה": 0.001609,
+        "קצבת ילדים - מספר משפחות": 0.134806,
+        "קצבת ילדים - מספר ילדים": 0.275102,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.011214,
+        "דמי לידה": 0.000568,
+        "מזונות": 0.002886,
+        "הבטחת הכנסה": 0.019116,
+        "אבטלה": 0.013627
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": -13.5,
+        "תושבים 18-64": 7.5,
+        "תושבים 65+": -2.2,
+        "זקנה ושאירים - כלל המקבלים": -0.2,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 5.2,
+        "זקנה ושאירים - קצבת זקנה בלבד": -8.7,
+        "גמלת סיעוד": -24.2,
+        "נכות כללית": -1.6,
+        "שירותים מיוחדים": 6.4,
+        "גמלת ילד נכה": -33.4,
+        "ניידות": 1.4,
+        "נפגעי עבודה - קצבת נכות ותלויים": 27.1,
+        "נפגעי עבודה - דמי פגיעה": 30.8,
+        "קצבת ילדים - מספר משפחות": -3.8,
+        "קצבת ילדים - מספר ילדים": -13.8,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -43.0,
+        "דמי לידה": -46.8,
+        "מזונות": 58.0,
+        "הבטחת הכנסה": 104.8,
+        "אבטלה": 48.4
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "ג'וליס",
+      "btlName": "ג'ולס",
+      "cluster": 5,
+      "population": 6871,
+      "values": {
+        "תושבים 0-17": 0.258769,
+        "תושבים 18-64": 0.658419,
+        "תושבים 65+": 0.082812,
+        "זקנה ושאירים - כלל המקבלים": 0.079028,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.008732,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.064474,
+        "גמלת סיעוד": 0.026634,
+        "נכות כללית": 0.042206,
+        "שירותים מיוחדים": 0.014117,
+        "גמלת ילד נכה": 0.008732,
+        "ניידות": 0.007568,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.006986,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.137098,
+        "קצבת ילדים - מספר ילדים": 0.256877,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.00262,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.005239,
+        "אבטלה": 0.013681
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.314075,
+        "תושבים 18-64": 0.563333,
+        "תושבים 65+": 0.122592,
+        "זקנה ושאירים - כלל המקבלים": 0.117891,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.026734,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.107483,
+        "גמלת סיעוד": 0.043447,
+        "נכות כללית": 0.039778,
+        "שירותים מיוחדים": 0.01061,
+        "גמלת ילד נכה": 0.01506,
+        "ניידות": 0.00586,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008973,
+        "נפגעי עבודה - דמי פגיעה": 0.000842,
+        "קצבת ילדים - מספר משפחות": 0.131587,
+        "קצבת ילדים - מספר ילדים": 0.30605,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.019968,
+        "דמי לידה": 0.001232,
+        "מזונות": 0.001641,
+        "הבטחת הכנסה": 0.006526,
+        "אבטלה": 0.009434
+      },
+      "pctDiff": {
+        "תושבים 0-17": -17.6,
+        "תושבים 18-64": 16.9,
+        "תושבים 65+": -32.4,
+        "זקנה ושאירים - כלל המקבלים": -33.0,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -67.3,
+        "זקנה ושאירים - קצבת זקנה בלבד": -40.0,
+        "גמלת סיעוד": -38.7,
+        "נכות כללית": 6.1,
+        "שירותים מיוחדים": 33.1,
+        "גמלת ילד נכה": -42.0,
+        "ניידות": 29.1,
+        "נפגעי עבודה - קצבת נכות ותלויים": -22.1,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 4.2,
+        "קצבת ילדים - מספר ילדים": -16.1,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -86.9,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": -19.7,
+        "אבטלה": 45.0
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "גוש חלב(ג'ש)",
+      "btlName": "ג'ש (גוש חלב)",
+      "cluster": 7,
+      "population": 3111,
+      "values": {
+        "תושבים 0-17": 0.252973,
+        "תושבים 18-64": 0.631308,
+        "תושבים 65+": 0.115718,
+        "זקנה ושאירים - כלל המקבלים": 0.112504,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.018322,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.099325,
+        "גמלת סיעוד": 0.051752,
+        "נכות כללית": 0.029572,
+        "שירותים מיוחדים": 0.00675,
+        "גמלת ילד נכה": 0.009,
+        "ניידות": 0.004822,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.012858,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.126326,
+        "קצבת ילדים - מספר ילדים": 0.251366,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.007393,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.004179,
+        "אבטלה": 0.012215
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.308669,
+        "תושבים 18-64": 0.554947,
+        "תושבים 65+": 0.136384,
+        "זקנה ושאירים - כלל המקבלים": 0.127727,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012235,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.121997,
+        "גמלת סיעוד": 0.03398,
+        "נכות כללית": 0.028724,
+        "שירותים מיוחדים": 0.007198,
+        "גמלת ילד נכה": 0.014121,
+        "ניידות": 0.005347,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009716,
+        "נפגעי עבודה - דמי פגיעה": 0.000588,
+        "קצבת ילדים - מספר משפחות": 0.132005,
+        "קצבת ילדים - מספר ילדים": 0.296479,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.015451,
+        "דמי לידה": 0.000935,
+        "מזונות": 0.000725,
+        "הבטחת הכנסה": 0.00294,
+        "אבטלה": 0.009038
+      },
+      "pctDiff": {
+        "תושבים 0-17": -18.0,
+        "תושבים 18-64": 13.8,
+        "תושבים 65+": -15.2,
+        "זקנה ושאירים - כלל המקבלים": -11.9,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 49.8,
+        "זקנה ושאירים - קצבת זקנה בלבד": -18.6,
+        "גמלת סיעוד": 52.3,
+        "נכות כללית": 3.0,
+        "שירותים מיוחדים": -6.2,
+        "גמלת ילד נכה": -36.3,
+        "ניידות": -9.8,
+        "נפגעי עבודה - קצבת נכות ותלויים": 32.3,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -4.3,
+        "קצבת ילדים - מספר ילדים": -15.2,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -52.2,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 42.1,
+        "אבטלה": 35.2
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "חורפיש",
+      "btlName": "חורפיש",
+      "cluster": 5,
+      "population": 6794,
+      "values": {
+        "תושבים 0-17": 0.298057,
+        "תושבים 18-64": 0.635708,
+        "תושבים 65+": 0.066235,
+        "זקנה ושאירים - כלל המקבלים": 0.06285,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.00839,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.049014,
+        "גמלת סיעוד": 0.028702,
+        "נכות כללית": 0.030762,
+        "שירותים מיוחדים": 0.00942,
+        "גמלת ילד נכה": 0.007359,
+        "ניידות": 0.006329,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.005152,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.144098,
+        "קצבת ילדים - מספר ילדים": 0.284221,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.008243,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.006035,
+        "אבטלה": 0.006476
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.314075,
+        "תושבים 18-64": 0.563333,
+        "תושבים 65+": 0.122592,
+        "זקנה ושאירים - כלל המקבלים": 0.117891,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.026734,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.107483,
+        "גמלת סיעוד": 0.043447,
+        "נכות כללית": 0.039778,
+        "שירותים מיוחדים": 0.01061,
+        "גמלת ילד נכה": 0.01506,
+        "ניידות": 0.00586,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008973,
+        "נפגעי עבודה - דמי פגיעה": 0.000842,
+        "קצבת ילדים - מספר משפחות": 0.131587,
+        "קצבת ילדים - מספר ילדים": 0.30605,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.019968,
+        "דמי לידה": 0.001232,
+        "מזונות": 0.001641,
+        "הבטחת הכנסה": 0.006526,
+        "אבטלה": 0.009434
+      },
+      "pctDiff": {
+        "תושבים 0-17": -5.1,
+        "תושבים 18-64": 12.8,
+        "תושבים 65+": -46.0,
+        "זקנה ושאירים - כלל המקבלים": -46.7,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -68.6,
+        "זקנה ושאירים - קצבת זקנה בלבד": -54.4,
+        "גמלת סיעוד": -33.9,
+        "נכות כללית": -22.7,
+        "שירותים מיוחדים": -11.2,
+        "גמלת ילד נכה": -51.1,
+        "ניידות": 8.0,
+        "נפגעי עבודה - קצבת נכות ותלויים": -42.6,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 9.5,
+        "קצבת ילדים - מספר ילדים": -7.1,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -58.7,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": -7.5,
+        "אבטלה": -31.4
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "חצור הגלילית",
+      "btlName": "חצור הגלילית",
+      "cluster": 4,
+      "population": 11134,
+      "values": {
+        "תושבים 0-17": 0.329801,
+        "תושבים 18-64": 0.541045,
+        "תושבים 65+": 0.129154,
+        "זקנה ושאירים - כלל המקבלים": 0.124573,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.020747,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.117568,
+        "גמלת סיעוד": 0.041854,
+        "נכות כללית": 0.060086,
+        "שירותים מיוחדים": 0.011945,
+        "גמלת ילד נכה": 0.023532,
+        "ניידות": 0.004221,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008443,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.137597,
+        "קצבת ילדים - מספר ילדים": 0.352973,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.026765,
+        "דמי לידה": null,
+        "מזונות": 0.001796,
+        "הבטחת הכנסה": 0.007994,
+        "אבטלה": 0.013832
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.320464,
+        "תושבים 18-64": 0.586191,
+        "תושבים 65+": 0.093344,
+        "זקנה ושאירים - כלל המקבלים": 0.089803,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.020161,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.078107,
+        "גמלת סיעוד": 0.038687,
+        "נכות כללית": 0.043003,
+        "שירותים מיוחדים": 0.011878,
+        "גמלת ילד נכה": 0.014616,
+        "ניידות": 0.006164,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009623,
+        "נפגעי עבודה - דמי פגיעה": 0.001098,
+        "קצבת ילדים - מספר משפחות": 0.137567,
+        "קצבת ילדים - מספר ילדים": 0.318446,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.020566,
+        "דמי לידה": 0.001299,
+        "מזונות": 0.001887,
+        "הבטחת הכנסה": 0.008783,
+        "אבטלה": 0.009635
+      },
+      "pctDiff": {
+        "תושבים 0-17": 2.9,
+        "תושבים 18-64": -7.7,
+        "תושבים 65+": 38.4,
+        "זקנה ושאירים - כלל המקבלים": 38.7,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 2.9,
+        "זקנה ושאירים - קצבת זקנה בלבד": 50.5,
+        "גמלת סיעוד": 8.2,
+        "נכות כללית": 39.7,
+        "שירותים מיוחדים": 0.6,
+        "גמלת ילד נכה": 61.0,
+        "ניידות": -31.5,
+        "נפגעי עבודה - קצבת נכות ותלויים": -12.3,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.0,
+        "קצבת ילדים - מספר ילדים": 10.8,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 30.1,
+        "דמי לידה": null,
+        "מזונות": -4.8,
+        "הבטחת הכנסה": -9.0,
+        "אבטלה": 43.6
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "טובא-זנגריה",
+      "btlName": "טובא-זנגרייה",
+      "cluster": 3,
+      "population": 6905,
+      "values": {
+        "תושבים 0-17": 0.33903,
+        "תושבים 18-64": 0.611731,
+        "תושבים 65+": 0.04924,
+        "זקנה ושאירים - כלל המקבלים": 0.049529,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012165,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.039537,
+        "גמלת סיעוד": 0.023751,
+        "נכות כללית": 0.055467,
+        "שירותים מיוחדים": 0.015641,
+        "גמלת ילד נכה": 0.012889,
+        "ניידות": 0.008255,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009703,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.136423,
+        "קצבת ילדים - מספר ילדים": 0.311224,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.018392,
+        "דמי לידה": null,
+        "מזונות": 0.002172,
+        "הבטחת הכנסה": 0.009993,
+        "אבטלה": 0.015351
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": 4.9,
+        "תושבים 18-64": 1.0,
+        "תושבים 65+": -30.8,
+        "זקנה ושאירים - כלל המקבלים": -27.1,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -43.1,
+        "זקנה ושאירים - קצבת זקנה בלבד": -25.7,
+        "גמלת סיעוד": -33.1,
+        "נכות כללית": 17.8,
+        "שירותים מיוחדים": 13.8,
+        "גמלת ילד נכה": 2.5,
+        "ניידות": 25.4,
+        "נפגעי עבודה - קצבת נכות ותלויים": 7.7,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -2.6,
+        "קצבת ילדים - מספר ילדים": -2.5,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -6.5,
+        "דמי לידה": null,
+        "מזונות": 18.9,
+        "הבטחת הכנסה": 7.1,
+        "אבטלה": 67.2
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "ירכא",
+      "btlName": "ירכא",
+      "cluster": 3,
+      "population": 17188,
+      "values": {
+        "תושבים 0-17": 0.297184,
+        "תושבים 18-64": 0.63684,
+        "תושבים 65+": 0.065976,
+        "זקנה ושאירים - כלל המקבלים": 0.062893,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.008727,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.048639,
+        "גמלת סיעוד": 0.026239,
+        "נכות כללית": 0.059227,
+        "שירותים מיוחדים": 0.014836,
+        "גמלת ילד נכה": 0.00832,
+        "ניידות": 0.009658,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.011112,
+        "נפגעי עבודה - דמי פגיעה": 0.000931,
+        "קצבת ילדים - מספר משפחות": 0.142367,
+        "קצבת ילדים - מספר ילדים": 0.300151,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.012043,
+        "דמי לידה": 0.001164,
+        "מזונות": 0.000815,
+        "הבטחת הכנסה": 0.008029,
+        "אבטלה": 0.006982
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": -8.0,
+        "תושבים 18-64": 5.1,
+        "תושבים 65+": -7.3,
+        "זקנה ושאירים - כלל המקבלים": -7.4,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -59.2,
+        "זקנה ושאירים - קצבת זקנה בלבד": -8.6,
+        "גמלת סיעוד": -26.1,
+        "נכות כללית": 25.8,
+        "שירותים מיוחדים": 7.9,
+        "גמלת ילד נכה": -33.9,
+        "ניידות": 46.7,
+        "נפגעי עבודה - קצבת נכות ותלויים": 23.4,
+        "נפגעי עבודה - דמי פגיעה": -24.3,
+        "קצבת ילדים - מספר משפחות": 1.6,
+        "קצבת ילדים - מספר ילדים": -5.9,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -38.8,
+        "דמי לידה": 9.0,
+        "מזונות": -55.4,
+        "הבטחת הכנסה": -14.0,
+        "אבטלה": -23.9
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "כסרא סמיע",
+      "btlName": "כסרא-סמיע",
+      "cluster": 3,
+      "population": 9582,
+      "values": {
+        "תושבים 0-17": 0.333751,
+        "תושבים 18-64": 0.615633,
+        "תושבים 65+": 0.050616,
+        "זקנה ושאירים - כלל המקבלים": 0.050616,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.007618,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.038718,
+        "גמלת סיעוד": 0.020664,
+        "נכות כללית": 0.042997,
+        "שירותים מיוחדים": 0.010749,
+        "גמלת ילד נכה": 0.012523,
+        "ניידות": 0.005531,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.007201,
+        "נפגעי עבודה - דמי פגיעה": 0.001357,
+        "קצבת ילדים - מספר משפחות": 0.154874,
+        "קצבת ילדים - מספר ילדים": 0.334586,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.013671,
+        "דמי לידה": 0.001148,
+        "מזונות": 0.001774,
+        "הבטחת הכנסה": 0.007932,
+        "אבטלה": 0.009184
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": 3.3,
+        "תושבים 18-64": 1.6,
+        "תושבים 65+": -28.9,
+        "זקנה ושאירים - כלל המקבלים": -25.5,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -64.3,
+        "זקנה ושאירים - קצבת זקנה בלבד": -27.3,
+        "גמלת סיעוד": -41.8,
+        "נכות כללית": -8.7,
+        "שירותים מיוחדים": -21.8,
+        "גמלת ילד נכה": -0.4,
+        "ניידות": -16.0,
+        "נפגעי עבודה - קצבת נכות ותלויים": -20.1,
+        "נפגעי עבודה - דמי פגיעה": 10.3,
+        "קצבת ילדים - מספר משפחות": 10.6,
+        "קצבת ילדים - מספר ילדים": 4.9,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -30.5,
+        "דמי לידה": 7.5,
+        "מזונות": -2.9,
+        "הבטחת הכנסה": -15.0,
+        "אבטלה": 0.0
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "כפר ורדים",
+      "btlName": "כפר ורדים",
+      "cluster": 9,
+      "population": 5549,
+      "values": {
+        "תושבים 0-17": 0.236439,
+        "תושבים 18-64": 0.547306,
+        "תושבים 65+": 0.216255,
+        "זקנה ושאירים - כלל המקבלים": 0.201478,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.00847,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.197333,
+        "גמלת סיעוד": 0.028113,
+        "נכות כללית": 0.024869,
+        "שירותים מיוחדים": 0.005226,
+        "גמלת ילד נכה": 0.015498,
+        "ניידות": 0.006488,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.006488,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.110651,
+        "קצבת ילדים - מספר ילדים": 0.22923,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.00829,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": null,
+        "אבטלה": 0.005767
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.28514,
+        "תושבים 18-64": 0.560644,
+        "תושבים 65+": 0.154216,
+        "זקנה ושאירים - כלל המקבלים": 0.143209,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.005826,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.138458,
+        "גמלת סיעוד": 0.024836,
+        "נכות כללית": 0.019723,
+        "שירותים מיוחדים": 0.005323,
+        "גמלת ילד נכה": 0.011294,
+        "ניידות": 0.005239,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008196,
+        "נפגעי עבודה - דמי פגיעה": 0.000258,
+        "קצבת ילדים - מספר משפחות": 0.129626,
+        "קצבת ילדים - מספר ילדים": 0.275527,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.009509,
+        "דמי לידה": 0.000774,
+        "מזונות": 0.000328,
+        "הבטחת הכנסה": 0.00125,
+        "אבטלה": 0.008204
+      },
+      "pctDiff": {
+        "תושבים 0-17": -17.1,
+        "תושבים 18-64": -2.4,
+        "תושבים 65+": 40.2,
+        "זקנה ושאירים - כלל המקבלים": 40.7,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 45.4,
+        "זקנה ושאירים - קצבת זקנה בלבד": 42.5,
+        "גמלת סיעוד": 13.2,
+        "נכות כללית": 26.1,
+        "שירותים מיוחדים": -1.8,
+        "גמלת ילד נכה": 37.2,
+        "ניידות": 23.8,
+        "נפגעי עבודה - קצבת נכות ותלויים": -20.8,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -14.6,
+        "קצבת ילדים - מספר ילדים": -16.8,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -12.8,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": null,
+        "אבטלה": -29.7
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "כפר יאסיף",
+      "btlName": "כפר יאסיף",
+      "cluster": 5,
+      "population": 10620,
+      "values": {
+        "תושבים 0-17": 0.268456,
+        "תושבים 18-64": 0.626177,
+        "תושבים 65+": 0.105367,
+        "זקנה ושאירים - כלל המקבלים": 0.106215,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.020621,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.086158,
+        "גמלת סיעוד": 0.034087,
+        "נכות כללית": 0.043974,
+        "שירותים מיוחדים": 0.014595,
+        "גמלת ילד נכה": 0.007721,
+        "ניידות": 0.008663,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009699,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.133898,
+        "קצבת ילדים - מספר ילדים": 0.25725,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.006026,
+        "דמי לידה": null,
+        "מזונות": 0.001883,
+        "הבטחת הכנסה": 0.012241,
+        "אבטלה": 0.012712
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.314075,
+        "תושבים 18-64": 0.563333,
+        "תושבים 65+": 0.122592,
+        "זקנה ושאירים - כלל המקבלים": 0.117891,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.026734,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.107483,
+        "גמלת סיעוד": 0.043447,
+        "נכות כללית": 0.039778,
+        "שירותים מיוחדים": 0.01061,
+        "גמלת ילד נכה": 0.01506,
+        "ניידות": 0.00586,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008973,
+        "נפגעי עבודה - דמי פגיעה": 0.000842,
+        "קצבת ילדים - מספר משפחות": 0.131587,
+        "קצבת ילדים - מספר ילדים": 0.30605,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.019968,
+        "דמי לידה": 0.001232,
+        "מזונות": 0.001641,
+        "הבטחת הכנסה": 0.006526,
+        "אבטלה": 0.009434
+      },
+      "pctDiff": {
+        "תושבים 0-17": -14.5,
+        "תושבים 18-64": 11.2,
+        "תושבים 65+": -14.1,
+        "זקנה ושאירים - כלל המקבלים": -9.9,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -22.9,
+        "זקנה ושאירים - קצבת זקנה בלבד": -19.8,
+        "גמלת סיעוד": -21.5,
+        "נכות כללית": 10.5,
+        "שירותים מיוחדים": 37.6,
+        "גמלת ילד נכה": -48.7,
+        "ניידות": 47.8,
+        "נפגעי עבודה - קצבת נכות ותלויים": 8.1,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 1.8,
+        "קצבת ילדים - מספר ילדים": -15.9,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -69.8,
+        "דמי לידה": null,
+        "מזונות": 14.7,
+        "הבטחת הכנסה": 87.6,
+        "אבטלה": 34.7
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "מג'דל שמס",
+      "btlName": "מג'דל שמס",
+      "cluster": 3,
+      "population": 11660,
+      "values": {
+        "תושבים 0-17": 0.254631,
+        "תושבים 18-64": 0.657976,
+        "תושבים 65+": 0.087393,
+        "זקנה ושאירים - כלל המקבלים": 0.08036,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.036878,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.060377,
+        "גמלת סיעוד": 0.04271,
+        "נכות כללית": 0.050086,
+        "שירותים מיוחדים": 0.011063,
+        "גמלת ילד נכה": 0.007976,
+        "ניידות": 0.006175,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.005575,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.140137,
+        "קצבת ילדים - מספר ילדים": 0.256089,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.004031,
+        "דמי לידה": null,
+        "מזונות": 0.001801,
+        "הבטחת הכנסה": 0.010892,
+        "אבטלה": 0.01012
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": -21.2,
+        "תושבים 18-64": 8.6,
+        "תושבים 65+": 22.8,
+        "זקנה ושאירים - כלל המקבלים": 18.3,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 72.6,
+        "זקנה ושאירים - קצבת זקנה בלבד": 13.4,
+        "גמלת סיעוד": 20.3,
+        "נכות כללית": 6.4,
+        "שירותים מיוחדים": -19.5,
+        "גמלת ילד נכה": -36.6,
+        "ניידות": -6.2,
+        "נפגעי עבודה - קצבת נכות ותלויים": -38.1,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.1,
+        "קצבת ילדים - מספר ילדים": -19.7,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -79.5,
+        "דמי לידה": null,
+        "מזונות": -1.4,
+        "הבטחת הכנסה": 16.7,
+        "אבטלה": 10.2
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "מזרעה",
+      "btlName": "מזרעה",
+      "cluster": 4,
+      "population": 4149,
+      "values": {
+        "תושבים 0-17": 0.286575,
+        "תושבים 18-64": 0.625934,
+        "תושבים 65+": 0.087491,
+        "זקנה ושאירים - כלל המקבלים": 0.087973,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.02121,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.067727,
+        "גמלת סיעוד": 0.025548,
+        "נכות כללית": 0.036876,
+        "שירותים מיוחדים": 0.010364,
+        "גמלת ילד נכה": 0.009882,
+        "ניידות": 0.007231,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.013256,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.139552,
+        "קצבת ילדים - מספר ילדים": 0.273801,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.005544,
+        "דמי לידה": null,
+        "מזונות": 0.004097,
+        "הבטחת הכנסה": 0.011569,
+        "אבטלה": 0.013256
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.320464,
+        "תושבים 18-64": 0.586191,
+        "תושבים 65+": 0.093344,
+        "זקנה ושאירים - כלל המקבלים": 0.089803,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.020161,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.078107,
+        "גמלת סיעוד": 0.038687,
+        "נכות כללית": 0.043003,
+        "שירותים מיוחדים": 0.011878,
+        "גמלת ילד נכה": 0.014616,
+        "ניידות": 0.006164,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009623,
+        "נפגעי עבודה - דמי פגיעה": 0.001098,
+        "קצבת ילדים - מספר משפחות": 0.137567,
+        "קצבת ילדים - מספר ילדים": 0.318446,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.020566,
+        "דמי לידה": 0.001299,
+        "מזונות": 0.001887,
+        "הבטחת הכנסה": 0.008783,
+        "אבטלה": 0.009635
+      },
+      "pctDiff": {
+        "תושבים 0-17": -10.6,
+        "תושבים 18-64": 6.8,
+        "תושבים 65+": -6.3,
+        "זקנה ושאירים - כלל המקבלים": -2.0,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 5.2,
+        "זקנה ושאירים - קצבת זקנה בלבד": -13.3,
+        "גמלת סיעוד": -34.0,
+        "נכות כללית": -14.2,
+        "שירותים מיוחדים": -12.7,
+        "גמלת ילד נכה": -32.4,
+        "ניידות": 17.3,
+        "נפגעי עבודה - קצבת נכות ותלויים": 37.8,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 1.4,
+        "קצבת ילדים - מספר ילדים": -14.0,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -73.0,
+        "דמי לידה": null,
+        "מזונות": 117.1,
+        "הבטחת הכנסה": 31.7,
+        "אבטלה": 37.6
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "מסעדה",
+      "btlName": "מסעדה",
+      "cluster": 3,
+      "population": 4198,
+      "values": {
+        "תושבים 0-17": 0.301572,
+        "תושבים 18-64": 0.620057,
+        "תושבים 65+": 0.078371,
+        "זקנה ושאירים - כלל המקבלים": 0.070033,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.029061,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.056694,
+        "גמלת סיעוד": 0.041448,
+        "נכות כללית": 0.045498,
+        "שירותים מיוחדים": 0.010719,
+        "גמלת ילד נכה": 0.00929,
+        "ניידות": 0.006908,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.005479,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.143402,
+        "קצבת ילדים - מספר ילדים": 0.289662,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.011196,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.011196,
+        "אבטלה": 0.010958
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": -6.7,
+        "תושבים 18-64": 2.4,
+        "תושבים 65+": 10.1,
+        "זקנה ושאירים - כלל המקבלים": 3.1,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 36.0,
+        "זקנה ושאירים - קצבת זקנה בלבד": 6.5,
+        "גמלת סיעוד": 16.7,
+        "נכות כללית": -3.4,
+        "שירותים מיוחדים": -22.0,
+        "גמלת ילד נכה": -26.1,
+        "ניידות": 4.9,
+        "נפגעי עבודה - קצבת נכות ותלויים": -39.2,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 2.4,
+        "קצבת ילדים - מספר ילדים": -9.2,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -43.1,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 20.0,
+        "אבטלה": 19.4
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "מעיליא",
+      "btlName": "מעיליא",
+      "cluster": 7,
+      "population": 3165,
+      "values": {
+        "תושבים 0-17": 0.234755,
+        "תושבים 18-64": 0.617062,
+        "תושבים 65+": 0.148183,
+        "זקנה ושאירים - כלל המקבלים": 0.141864,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.015166,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.126382,
+        "גמלת סיעוד": 0.059084,
+        "נכות כללית": 0.026224,
+        "שירותים מיוחדים": 0.005371,
+        "גמלת ילד נכה": 0.003791,
+        "ניידות": 0.006319,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.012006,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.120063,
+        "קצבת ילדים - מספר ילדים": 0.223697,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.004423,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.005371,
+        "אבטלה": 0.007899
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.308669,
+        "תושבים 18-64": 0.554947,
+        "תושבים 65+": 0.136384,
+        "זקנה ושאירים - כלל המקבלים": 0.127727,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012235,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.121997,
+        "גמלת סיעוד": 0.03398,
+        "נכות כללית": 0.028724,
+        "שירותים מיוחדים": 0.007198,
+        "גמלת ילד נכה": 0.014121,
+        "ניידות": 0.005347,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009716,
+        "נפגעי עבודה - דמי פגיעה": 0.000588,
+        "קצבת ילדים - מספר משפחות": 0.132005,
+        "קצבת ילדים - מספר ילדים": 0.296479,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.015451,
+        "דמי לידה": 0.000935,
+        "מזונות": 0.000725,
+        "הבטחת הכנסה": 0.00294,
+        "אבטלה": 0.009038
+      },
+      "pctDiff": {
+        "תושבים 0-17": -23.9,
+        "תושבים 18-64": 11.2,
+        "תושבים 65+": 8.7,
+        "זקנה ושאירים - כלל המקבלים": 11.1,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 24.0,
+        "זקנה ושאירים - קצבת זקנה בלבד": 3.6,
+        "גמלת סיעוד": 73.9,
+        "נכות כללית": -8.7,
+        "שירותים מיוחדים": -25.4,
+        "גמלת ילד נכה": -73.2,
+        "ניידות": 18.2,
+        "נפגעי עבודה - קצבת נכות ותלויים": 23.6,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -9.0,
+        "קצבת ילדים - מספר ילדים": -24.5,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -71.4,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 82.7,
+        "אבטלה": -12.6
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "מעלות תרשיחא",
+      "btlName": "מעלות-תרשיחא",
+      "cluster": 5,
+      "population": 23448,
+      "values": {
+        "תושבים 0-17": 0.258103,
+        "תושבים 18-64": 0.573652,
+        "תושבים 65+": 0.168245,
+        "זקנה ושאירים - כלל המקבלים": 0.162061,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.05574,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.150802,
+        "גמלת סיעוד": 0.044865,
+        "נכות כללית": 0.036975,
+        "שירותים מיוחדים": 0.00853,
+        "גמלת ילד נכה": 0.012709,
+        "ניידות": 0.005288,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008402,
+        "נפגעי עבודה - דמי פגיעה": 0.000853,
+        "קצבת ילדים - מספר משפחות": 0.119371,
+        "קצבת ילדים - מספר ילדים": 0.262112,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.016377,
+        "דמי לידה": 0.000682,
+        "מזונות": 0.001493,
+        "הבטחת הכנסה": 0.010705,
+        "אבטלה": 0.010406
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.314075,
+        "תושבים 18-64": 0.563333,
+        "תושבים 65+": 0.122592,
+        "זקנה ושאירים - כלל המקבלים": 0.117891,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.026734,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.107483,
+        "גמלת סיעוד": 0.043447,
+        "נכות כללית": 0.039778,
+        "שירותים מיוחדים": 0.01061,
+        "גמלת ילד נכה": 0.01506,
+        "ניידות": 0.00586,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008973,
+        "נפגעי עבודה - דמי פגיעה": 0.000842,
+        "קצבת ילדים - מספר משפחות": 0.131587,
+        "קצבת ילדים - מספר ילדים": 0.30605,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.019968,
+        "דמי לידה": 0.001232,
+        "מזונות": 0.001641,
+        "הבטחת הכנסה": 0.006526,
+        "אבטלה": 0.009434
+      },
+      "pctDiff": {
+        "תושבים 0-17": -17.8,
+        "תושבים 18-64": 1.8,
+        "תושבים 65+": 37.2,
+        "זקנה ושאירים - כלל המקבלים": 37.5,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 108.5,
+        "זקנה ושאירים - קצבת זקנה בלבד": 40.3,
+        "גמלת סיעוד": 3.3,
+        "נכות כללית": -7.0,
+        "שירותים מיוחדים": -19.6,
+        "גמלת ילד נכה": -15.6,
+        "ניידות": -9.8,
+        "נפגעי עבודה - קצבת נכות ותלויים": -6.4,
+        "נפגעי עבודה - דמי פגיעה": 1.3,
+        "קצבת ילדים - מספר משפחות": -9.3,
+        "קצבת ילדים - מספר ילדים": -14.4,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -18.0,
+        "דמי לידה": -44.6,
+        "מזונות": -9.0,
+        "הבטחת הכנסה": 64.0,
+        "אבטלה": 10.3
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "נהריה",
+      "btlName": "נהרייה",
+      "cluster": 6,
+      "population": 67695,
+      "values": {
+        "תושבים 0-17": 0.237566,
+        "תושבים 18-64": 0.571948,
+        "תושבים 65+": 0.190487,
+        "זקנה ושאירים - כלל המקבלים": 0.180486,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.043519,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.171047,
+        "גמלת סיעוד": 0.046591,
+        "נכות כללית": 0.039412,
+        "שירותים מיוחדים": 0.009011,
+        "גמלת ילד נכה": 0.015629,
+        "ניידות": 0.006012,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.011655,
+        "נפגעי עבודה - דמי פגיעה": 0.000606,
+        "קצבת ילדים - מספר משפחות": 0.122978,
+        "קצבת ילדים - מספר ילדים": 0.241451,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.008745,
+        "דמי לידה": 0.000694,
+        "מזונות": 0.001315,
+        "הבטחת הכנסה": 0.011892,
+        "אבטלה": 0.010178
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.339082,
+        "תושבים 18-64": 0.536165,
+        "תושבים 65+": 0.124753,
+        "זקנה ושאירים - כלל המקבלים": 0.116714,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.017065,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.110478,
+        "גמלת סיעוד": 0.031051,
+        "נכות כללית": 0.031797,
+        "שירותים מיוחדים": 0.007687,
+        "גמלת ילד נכה": 0.015072,
+        "ניידות": 0.005038,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008981,
+        "נפגעי עבודה - דמי פגיעה": 0.000694,
+        "קצבת ילדים - מספר משפחות": 0.132234,
+        "קצבת ילדים - מספר ילדים": 0.331594,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.026719,
+        "דמי לידה": 0.001395,
+        "מזונות": 0.001322,
+        "הבטחת הכנסה": 0.004558,
+        "אבטלה": 0.008581
+      },
+      "pctDiff": {
+        "תושבים 0-17": -29.9,
+        "תושבים 18-64": 6.7,
+        "תושבים 65+": 52.7,
+        "זקנה ושאירים - כלל המקבלים": 54.6,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 155.0,
+        "זקנה ושאירים - קצבת זקנה בלבד": 54.8,
+        "גמלת סיעוד": 50.0,
+        "נכות כללית": 23.9,
+        "שירותים מיוחדים": 17.2,
+        "גמלת ילד נכה": 3.7,
+        "ניידות": 19.3,
+        "נפגעי עבודה - קצבת נכות ותלויים": 29.8,
+        "נפגעי עבודה - דמי פגיעה": -12.7,
+        "קצבת ילדים - מספר משפחות": -7.0,
+        "קצבת ילדים - מספר ילדים": -27.2,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -67.3,
+        "דמי לידה": -50.3,
+        "מזונות": -0.5,
+        "הבטחת הכנסה": 160.9,
+        "אבטלה": 18.6
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "עג'ר",
+      "btlName": "ע'ג'ר",
+      "cluster": 3,
+      "population": 2887,
+      "values": {
+        "תושבים 0-17": 0.33495,
+        "תושבים 18-64": 0.62106,
+        "תושבים 65+": 0.04399,
+        "זקנה ושאירים - כלל המקבלים": 0.038102,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.020783,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.026671,
+        "גמלת סיעוד": 0.018012,
+        "נכות כללית": 0.030828,
+        "שירותים מיוחדים": 0.010391,
+        "גמלת ילד נכה": 0.006581,
+        "ניידות": 0.004849,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.004503,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.150329,
+        "קצבת ילדים - מספר ילדים": 0.336682,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.018012,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.010391,
+        "אבטלה": 0.014548
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": 3.7,
+        "תושבים 18-64": 2.5,
+        "תושבים 65+": -38.2,
+        "זקנה ושאירים - כלל המקבלים": -43.9,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -2.7,
+        "זקנה ושאירים - קצבת זקנה בלבד": -49.9,
+        "גמלת סיעוד": -49.3,
+        "נכות כללית": -34.5,
+        "שירותים מיוחדים": -24.4,
+        "גמלת ילד נכה": -47.7,
+        "ניידות": -26.3,
+        "נפגעי עבודה - קצבת נכות ותלויים": -50.0,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 7.3,
+        "קצבת ילדים - מספר ילדים": 5.5,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -8.4,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 11.3,
+        "אבטלה": 58.5
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "עין קיניה",
+      "btlName": "עין קנייא",
+      "cluster": 3,
+      "population": 2392,
+      "values": {
+        "תושבים 0-17": 0.313545,
+        "תושבים 18-64": 0.61204,
+        "תושבים 65+": 0.074415,
+        "זקנה ושאירים - כלל המקבלים": 0.066054,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.036371,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.048077,
+        "גמלת סיעוד": 0.040552,
+        "נכות כללית": 0.052676,
+        "שירותים מיוחדים": 0.014632,
+        "גמלת ילד נכה": 0.007943,
+        "ניידות": 0.005017,
+        "נפגעי עבודה - קצבת נכות ותלויים": null,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.153428,
+        "קצבת ילדים - מספר ילדים": 0.285953,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.005853,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.009197,
+        "אבטלה": 0.008779
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.323109,
+        "תושבים 18-64": 0.605733,
+        "תושבים 65+": 0.071157,
+        "זקנה ושאירים - כלל המקבלים": 0.067912,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+        "גמלת סיעוד": 0.035516,
+        "נכות כללית": 0.047095,
+        "שירותים מיוחדים": 0.013748,
+        "גמלת ילד נכה": 0.012579,
+        "ניידות": 0.006583,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+        "נפגעי עבודה - דמי פגיעה": 0.00123,
+        "קצבת ילדים - מספר משפחות": 0.140062,
+        "קצבת ילדים - מספר ילדים": 0.319069,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+        "דמי לידה": 0.001068,
+        "מזונות": 0.001827,
+        "הבטחת הכנסה": 0.009333,
+        "אבטלה": 0.00918
+      },
+      "pctDiff": {
+        "תושבים 0-17": -3.0,
+        "תושבים 18-64": 1.0,
+        "תושבים 65+": 4.6,
+        "זקנה ושאירים - כלל המקבלים": -2.7,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 70.2,
+        "זקנה ושאירים - קצבת זקנה בלבד": -9.7,
+        "גמלת סיעוד": 14.2,
+        "נכות כללית": 11.9,
+        "שירותים מיוחדים": 6.4,
+        "גמלת ילד נכה": -36.9,
+        "ניידות": -23.8,
+        "נפגעי עבודה - קצבת נכות ותלויים": null,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 9.5,
+        "קצבת ילדים - מספר ילדים": -10.4,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -70.2,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": -1.5,
+        "אבטלה": -4.4
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "עכו",
+      "btlName": "עכו",
+      "cluster": 4,
+      "population": 53986,
+      "values": {
+        "תושבים 0-17": 0.260253,
+        "תושבים 18-64": 0.584337,
+        "תושבים 65+": 0.155411,
+        "זקנה ושאירים - כלל המקבלים": 0.152021,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.048827,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.138017,
+        "גמלת סיעוד": 0.043937,
+        "נכות כללית": 0.048994,
+        "שירותים מיוחדים": 0.013855,
+        "גמלת ילד נכה": 0.013985,
+        "ניידות": 0.005927,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.010188,
+        "נפגעי עבודה - דמי פגיעה": 0.001,
+        "קצבת ילדים - מספר משפחות": 0.128367,
+        "קצבת ילדים - מספר ילדים": 0.266588,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.012188,
+        "דמי לידה": 0.000945,
+        "מזונות": 0.003649,
+        "הבטחת הכנסה": 0.018486,
+        "אבטלה": 0.011966
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.320464,
+        "תושבים 18-64": 0.586191,
+        "תושבים 65+": 0.093344,
+        "זקנה ושאירים - כלל המקבלים": 0.089803,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.020161,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.078107,
+        "גמלת סיעוד": 0.038687,
+        "נכות כללית": 0.043003,
+        "שירותים מיוחדים": 0.011878,
+        "גמלת ילד נכה": 0.014616,
+        "ניידות": 0.006164,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009623,
+        "נפגעי עבודה - דמי פגיעה": 0.001098,
+        "קצבת ילדים - מספר משפחות": 0.137567,
+        "קצבת ילדים - מספר ילדים": 0.318446,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.020566,
+        "דמי לידה": 0.001299,
+        "מזונות": 0.001887,
+        "הבטחת הכנסה": 0.008783,
+        "אבטלה": 0.009635
+      },
+      "pctDiff": {
+        "תושבים 0-17": -18.8,
+        "תושבים 18-64": -0.3,
+        "תושבים 65+": 66.5,
+        "זקנה ושאירים - כלל המקבלים": 69.3,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 142.2,
+        "זקנה ושאירים - קצבת זקנה בלבד": 76.7,
+        "גמלת סיעוד": 13.6,
+        "נכות כללית": 13.9,
+        "שירותים מיוחדים": 16.6,
+        "גמלת ילד נכה": -4.3,
+        "ניידות": -3.8,
+        "נפגעי עבודה - קצבת נכות ותלויים": 5.9,
+        "נפגעי עבודה - דמי פגיעה": -8.9,
+        "קצבת ילדים - מספר משפחות": -6.7,
+        "קצבת ילדים - מספר ילדים": -16.3,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -40.7,
+        "דמי לידה": -27.3,
+        "מזונות": 93.4,
+        "הבטחת הכנסה": 110.5,
+        "אבטלה": 24.2
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "פסוטה",
+      "btlName": "פסוטה",
+      "cluster": 7,
+      "population": 3431,
+      "values": {
+        "תושבים 0-17": 0.242495,
+        "תושבים 18-64": 0.636549,
+        "תושבים 65+": 0.120956,
+        "זקנה ושאירים - כלל המקבלים": 0.114835,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.028272,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.098805,
+        "גמלת סיעוד": 0.045176,
+        "נכות כללית": 0.030895,
+        "שירותים מיוחדים": 0.007287,
+        "גמלת ילד נכה": null,
+        "ניידות": 0.005246,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.01195,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.12183,
+        "קצבת ילדים - מספר ילדים": 0.241329,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.006412,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.003498,
+        "אבטלה": 0.015447
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.308669,
+        "תושבים 18-64": 0.554947,
+        "תושבים 65+": 0.136384,
+        "זקנה ושאירים - כלל המקבלים": 0.127727,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012235,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.121997,
+        "גמלת סיעוד": 0.03398,
+        "נכות כללית": 0.028724,
+        "שירותים מיוחדים": 0.007198,
+        "גמלת ילד נכה": 0.014121,
+        "ניידות": 0.005347,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009716,
+        "נפגעי עבודה - דמי פגיעה": 0.000588,
+        "קצבת ילדים - מספר משפחות": 0.132005,
+        "קצבת ילדים - מספר ילדים": 0.296479,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.015451,
+        "דמי לידה": 0.000935,
+        "מזונות": 0.000725,
+        "הבטחת הכנסה": 0.00294,
+        "אבטלה": 0.009038
+      },
+      "pctDiff": {
+        "תושבים 0-17": -21.4,
+        "תושבים 18-64": 14.7,
+        "תושבים 65+": -11.3,
+        "זקנה ושאירים - כלל המקבלים": -10.1,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 131.1,
+        "זקנה ושאירים - קצבת זקנה בלבד": -19.0,
+        "גמלת סיעוד": 32.9,
+        "נכות כללית": 7.6,
+        "שירותים מיוחדים": 1.2,
+        "גמלת ילד נכה": null,
+        "ניידות": -1.9,
+        "נפגעי עבודה - קצבת נכות ותלויים": 23.0,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -7.7,
+        "קצבת ילדים - מספר ילדים": -18.6,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -58.5,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 19.0,
+        "אבטלה": 70.9
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "צפת",
+      "btlName": "צפת",
+      "cluster": 2,
+      "population": 39301,
+      "values": {
+        "תושבים 0-17": 0.400931,
+        "תושבים 18-64": 0.49472,
+        "תושבים 65+": 0.104348,
+        "זקנה ושאירים - כלל המקבלים": 0.098522,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.023435,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.092161,
+        "גמלת סיעוד": 0.031424,
+        "נכות כללית": 0.062848,
+        "שירותים מיוחדים": 0.008448,
+        "גמלת ילד נכה": 0.023714,
+        "ניידות": 0.003944,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.004758,
+        "נפגעי עבודה - דמי פגיעה": 0.00028,
+        "קצבת ילדים - מספר משפחות": 0.126155,
+        "קצבת ילדים - מספר ילדים": 0.413984,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.047149,
+        "דמי לידה": 0.001425,
+        "מזונות": 0.001628,
+        "הבטחת הכנסה": 0.009516,
+        "אבטלה": 0.007583
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.432547,
+        "תושבים 18-64": 0.512027,
+        "תושבים 65+": 0.055427,
+        "זקנה ושאירים - כלל המקבלים": 0.052702,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.010976,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.044964,
+        "גמלת סיעוד": 0.020584,
+        "נכות כללית": 0.040602,
+        "שירותים מיוחדים": 0.009399,
+        "גמלת ילד נכה": 0.019335,
+        "ניידות": 0.005172,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.005687,
+        "נפגעי עבודה - דמי פגיעה": 0.00074,
+        "קצבת ילדים - מספר משפחות": 0.140376,
+        "קצבת ילדים - מספר ילדים": 0.424789,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.045099,
+        "דמי לידה": 0.001916,
+        "מזונות": 0.001746,
+        "הבטחת הכנסה": 0.007373,
+        "אבטלה": 0.006784
+      },
+      "pctDiff": {
+        "תושבים 0-17": -7.3,
+        "תושבים 18-64": -3.4,
+        "תושבים 65+": 88.3,
+        "זקנה ושאירים - כלל המקבלים": 86.9,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 113.5,
+        "זקנה ושאירים - קצבת זקנה בלבד": 105.0,
+        "גמלת סיעוד": 52.7,
+        "נכות כללית": 54.8,
+        "שירותים מיוחדים": -10.1,
+        "גמלת ילד נכה": 22.6,
+        "ניידות": -23.7,
+        "נפגעי עבודה - קצבת נכות ותלויים": -16.3,
+        "נפגעי עבודה - דמי פגיעה": -62.2,
+        "קצבת ילדים - מספר משפחות": -10.1,
+        "קצבת ילדים - מספר ילדים": -2.5,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 4.5,
+        "דמי לידה": -25.6,
+        "מזונות": -6.8,
+        "הבטחת הכנסה": 29.1,
+        "אבטלה": 11.8
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "קצרין",
+      "btlName": "קצרין",
+      "cluster": 5,
+      "population": 8380,
+      "values": {
+        "תושבים 0-17": 0.277208,
+        "תושבים 18-64": 0.551193,
+        "תושבים 65+": 0.171599,
+        "זקנה ושאירים - כלל המקבלים": 0.163007,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.046539,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.155609,
+        "גמלת סיעוד": 0.045823,
+        "נכות כללית": 0.052983,
+        "שירותים מיוחדים": 0.010382,
+        "גמלת ילד נכה": 0.019093,
+        "ניידות": 0.005131,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.006802,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.121122,
+        "קצבת ילדים - מספר ילדים": 0.283294,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.021718,
+        "דמי לידה": null,
+        "מזונות": 0.00179,
+        "הבטחת הכנסה": 0.006325,
+        "אבטלה": 0.013246
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.314075,
+        "תושבים 18-64": 0.563333,
+        "תושבים 65+": 0.122592,
+        "זקנה ושאירים - כלל המקבלים": 0.117891,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.026734,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.107483,
+        "גמלת סיעוד": 0.043447,
+        "נכות כללית": 0.039778,
+        "שירותים מיוחדים": 0.01061,
+        "גמלת ילד נכה": 0.01506,
+        "ניידות": 0.00586,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008973,
+        "נפגעי עבודה - דמי פגיעה": 0.000842,
+        "קצבת ילדים - מספר משפחות": 0.131587,
+        "קצבת ילדים - מספר ילדים": 0.30605,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.019968,
+        "דמי לידה": 0.001232,
+        "מזונות": 0.001641,
+        "הבטחת הכנסה": 0.006526,
+        "אבטלה": 0.009434
+      },
+      "pctDiff": {
+        "תושבים 0-17": -11.7,
+        "תושבים 18-64": -2.2,
+        "תושבים 65+": 40.0,
+        "זקנה ושאירים - כלל המקבלים": 38.3,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 74.1,
+        "זקנה ושאירים - קצבת זקנה בלבד": 44.8,
+        "גמלת סיעוד": 5.5,
+        "נכות כללית": 33.2,
+        "שירותים מיוחדים": -2.1,
+        "גמלת ילד נכה": 26.8,
+        "ניידות": -12.4,
+        "נפגעי עבודה - קצבת נכות ותלויים": -24.2,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -8.0,
+        "קצבת ילדים - מספר ילדים": -7.4,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 8.8,
+        "דמי לידה": null,
+        "מזונות": 9.1,
+        "הבטחת הכנסה": -3.1,
+        "אבטלה": 40.4
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "קרית שמונה",
+      "btlName": "קריית שמונה",
+      "cluster": 5,
+      "population": 24400,
+      "values": {
+        "תושבים 0-17": 0.233074,
+        "תושבים 18-64": 0.611557,
+        "תושבים 65+": 0.155369,
+        "זקנה ושאירים - כלל המקבלים": 0.149262,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.030697,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.140246,
+        "גמלת סיעוד": 0.046557,
+        "נכות כללית": 0.067664,
+        "שירותים מיוחדים": 0.013238,
+        "גמלת ילד נכה": 0.020615,
+        "ניידות": 0.007254,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008975,
+        "נפגעי עבודה - דמי פגיעה": 0.000451,
+        "קצבת ילדים - מספר משפחות": 0.115615,
+        "קצבת ילדים - מספר ילדים": 0.247869,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.014262,
+        "דמי לידה": 0.00082,
+        "מזונות": 0.002172,
+        "הבטחת הכנסה": 0.013402,
+        "אבטלה": 0.01877
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.314075,
+        "תושבים 18-64": 0.563333,
+        "תושבים 65+": 0.122592,
+        "זקנה ושאירים - כלל המקבלים": 0.117891,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.026734,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.107483,
+        "גמלת סיעוד": 0.043447,
+        "נכות כללית": 0.039778,
+        "שירותים מיוחדים": 0.01061,
+        "גמלת ילד נכה": 0.01506,
+        "ניידות": 0.00586,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008973,
+        "נפגעי עבודה - דמי פגיעה": 0.000842,
+        "קצבת ילדים - מספר משפחות": 0.131587,
+        "קצבת ילדים - מספר ילדים": 0.30605,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.019968,
+        "דמי לידה": 0.001232,
+        "מזונות": 0.001641,
+        "הבטחת הכנסה": 0.006526,
+        "אבטלה": 0.009434
+      },
+      "pctDiff": {
+        "תושבים 0-17": -25.8,
+        "תושבים 18-64": 8.6,
+        "תושבים 65+": 26.7,
+        "זקנה ושאירים - כלל המקבלים": 26.6,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 14.8,
+        "זקנה ושאירים - קצבת זקנה בלבד": 30.5,
+        "גמלת סיעוד": 7.2,
+        "נכות כללית": 70.1,
+        "שירותים מיוחדים": 24.8,
+        "גמלת ילד נכה": 36.9,
+        "ניידות": 23.8,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.0,
+        "נפגעי עבודה - דמי פגיעה": -46.4,
+        "קצבת ילדים - מספר משפחות": -12.1,
+        "קצבת ילדים - מספר ילדים": -19.0,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -28.6,
+        "דמי לידה": -33.4,
+        "מזונות": 32.4,
+        "הבטחת הכנסה": 105.4,
+        "אבטלה": 99.0
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "ראש פינה",
+      "btlName": "ראש פינה",
+      "cluster": 7,
+      "population": 3175,
+      "values": {
+        "תושבים 0-17": 0.251969,
+        "תושבים 18-64": 0.55622,
+        "תושבים 65+": 0.191811,
+        "זקנה ושאירים - כלל המקבלים": 0.184252,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.011339,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.178898,
+        "גמלת סיעוד": 0.029921,
+        "נכות כללית": 0.051969,
+        "שירותים מיוחדים": 0.012283,
+        "גמלת ילד נכה": 0.008819,
+        "ניידות": 0.007874,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008504,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.110236,
+        "קצבת ילדים - מספר ילדים": 0.244409,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.011969,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.004094,
+        "אבטלה": 0.006299
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.308669,
+        "תושבים 18-64": 0.554947,
+        "תושבים 65+": 0.136384,
+        "זקנה ושאירים - כלל המקבלים": 0.127727,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012235,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.121997,
+        "גמלת סיעוד": 0.03398,
+        "נכות כללית": 0.028724,
+        "שירותים מיוחדים": 0.007198,
+        "גמלת ילד נכה": 0.014121,
+        "ניידות": 0.005347,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009716,
+        "נפגעי עבודה - דמי פגיעה": 0.000588,
+        "קצבת ילדים - מספר משפחות": 0.132005,
+        "קצבת ילדים - מספר ילדים": 0.296479,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.015451,
+        "דמי לידה": 0.000935,
+        "מזונות": 0.000725,
+        "הבטחת הכנסה": 0.00294,
+        "אבטלה": 0.009038
+      },
+      "pctDiff": {
+        "תושבים 0-17": -18.4,
+        "תושבים 18-64": 0.2,
+        "תושבים 65+": 40.6,
+        "זקנה ושאירים - כלל המקבלים": 44.3,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -7.3,
+        "זקנה ושאירים - קצבת זקנה בלבד": 46.6,
+        "גמלת סיעוד": -11.9,
+        "נכות כללית": 80.9,
+        "שירותים מיוחדים": 70.6,
+        "גמלת ילד נכה": -37.5,
+        "ניידות": 47.3,
+        "נפגעי עבודה - קצבת נכות ותלויים": -12.5,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -16.5,
+        "קצבת ילדים - מספר ילדים": -17.6,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -22.5,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 39.3,
+        "אבטלה": -30.3
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "מטולה",
+      "btlName": "רמלה",
+      "cluster": 4,
+      "population": 82371,
+      "values": {
+        "תושבים 0-17": 0.309963,
+        "תושבים 18-64": 0.557429,
+        "תושבים 65+": 0.132607,
+        "זקנה ושאירים - כלל המקבלים": 0.129609,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.029015,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.119035,
+        "גמלת סיעוד": 0.057799,
+        "נכות כללית": 0.045016,
+        "שירותים מיוחדים": 0.013172,
+        "גמלת ילד נכה": 0.022726,
+        "ניידות": 0.005973,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.011934,
+        "נפגעי עבודה - דמי פגיעה": 0.001202,
+        "קצבת ילדים - מספר משפחות": 0.134149,
+        "קצבת ילדים - מספר ילדים": 0.309636,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.019813,
+        "דמי לידה": 0.000935,
+        "מזונות": 0.001675,
+        "הבטחת הכנסה": 0.006034,
+        "אבטלה": 0.008413
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.320464,
+        "תושבים 18-64": 0.586191,
+        "תושבים 65+": 0.093344,
+        "זקנה ושאירים - כלל המקבלים": 0.089803,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.020161,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.078107,
+        "גמלת סיעוד": 0.038687,
+        "נכות כללית": 0.043003,
+        "שירותים מיוחדים": 0.011878,
+        "גמלת ילד נכה": 0.014616,
+        "ניידות": 0.006164,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009623,
+        "נפגעי עבודה - דמי פגיעה": 0.001098,
+        "קצבת ילדים - מספר משפחות": 0.137567,
+        "קצבת ילדים - מספר ילדים": 0.318446,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.020566,
+        "דמי לידה": 0.001299,
+        "מזונות": 0.001887,
+        "הבטחת הכנסה": 0.008783,
+        "אבטלה": 0.009635
+      },
+      "pctDiff": {
+        "תושבים 0-17": -3.3,
+        "תושבים 18-64": -4.9,
+        "תושבים 65+": 42.1,
+        "זקנה ושאירים - כלל המקבלים": 44.3,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 43.9,
+        "זקנה ושאירים - קצבת זקנה בלבד": 52.4,
+        "גמלת סיעוד": 49.4,
+        "נכות כללית": 4.7,
+        "שירותים מיוחדים": 10.9,
+        "גמלת ילד נכה": 55.5,
+        "ניידות": -3.1,
+        "נפגעי עבודה - קצבת נכות ותלויים": 24.0,
+        "נפגעי עבודה - דמי פגיעה": 9.5,
+        "קצבת ילדים - מספר משפחות": -2.5,
+        "קצבת ילדים - מספר ילדים": -2.8,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -3.7,
+        "דמי לידה": -28.0,
+        "מזונות": -11.2,
+        "הבטחת הכנסה": -31.3,
+        "אבטלה": -12.7
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "שלומי",
+      "btlName": "שלומי",
+      "cluster": 6,
+      "population": 8093,
+      "values": {
+        "תושבים 0-17": 0.277894,
+        "תושבים 18-64": 0.608674,
+        "תושבים 65+": 0.113431,
+        "זקנה ושאירים - כלל המקבלים": 0.110589,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.024466,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.103546,
+        "גמלת סיעוד": 0.023106,
+        "נכות כללית": 0.041641,
+        "שירותים מיוחדים": 0.007043,
+        "גמלת ילד נכה": 0.018905,
+        "ניידות": 0.00556,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.011244,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.136538,
+        "קצבת ילדים - מספר ילדים": 0.277153,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.012233,
+        "דמי לידה": null,
+        "מזונות": 0.001853,
+        "הבטחת הכנסה": 0.011862,
+        "אבטלה": 0.013098
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.339082,
+        "תושבים 18-64": 0.536165,
+        "תושבים 65+": 0.124753,
+        "זקנה ושאירים - כלל המקבלים": 0.116714,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.017065,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.110478,
+        "גמלת סיעוד": 0.031051,
+        "נכות כללית": 0.031797,
+        "שירותים מיוחדים": 0.007687,
+        "גמלת ילד נכה": 0.015072,
+        "ניידות": 0.005038,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008981,
+        "נפגעי עבודה - דמי פגיעה": 0.000694,
+        "קצבת ילדים - מספר משפחות": 0.132234,
+        "קצבת ילדים - מספר ילדים": 0.331594,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.026719,
+        "דמי לידה": 0.001395,
+        "מזונות": 0.001322,
+        "הבטחת הכנסה": 0.004558,
+        "אבטלה": 0.008581
+      },
+      "pctDiff": {
+        "תושבים 0-17": -18.0,
+        "תושבים 18-64": 13.5,
+        "תושבים 65+": -9.1,
+        "זקנה ושאירים - כלל המקבלים": -5.2,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 43.4,
+        "זקנה ושאירים - קצבת זקנה בלבד": -6.3,
+        "גמלת סיעוד": -25.6,
+        "נכות כללית": 31.0,
+        "שירותים מיוחדים": -8.4,
+        "גמלת ילד נכה": 25.4,
+        "ניידות": 10.4,
+        "נפגעי עבודה - קצבת נכות ותלויים": 25.2,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 3.3,
+        "קצבת ילדים - מספר ילדים": -16.4,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -54.2,
+        "דמי לידה": null,
+        "מזונות": 40.2,
+        "הבטחת הכנסה": 160.2,
+        "אבטלה": 52.6
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "גליל עליון",
+      "btlName": "הגליל העליון",
+      "cluster": 7,
+      "population": 18945,
+      "values": {
+        "תושבים 0-17": 0.303721,
+        "תושבים 18-64": 0.533017,
+        "תושבים 65+": 0.163262,
+        "זקנה ושאירים - כלל המקבלים": 0.155608,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.002534,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.15223,
+        "גמלת סיעוד": 0.032251,
+        "נכות כללית": 0.031301,
+        "שירותים מיוחדים": 0.004856,
+        "גמלת ילד נכה": 0.010874,
+        "ניידות": 0.004223,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.004117,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.130325,
+        "קצבת ילדים - מספר ילדים": 0.275429,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.008234,
+        "דמי לידה": 0.00095,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.001689,
+        "אבטלה": 0.01024
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.308669,
+        "תושבים 18-64": 0.554947,
+        "תושבים 65+": 0.136384,
+        "זקנה ושאירים - כלל המקבלים": 0.127727,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012235,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.121997,
+        "גמלת סיעוד": 0.03398,
+        "נכות כללית": 0.028724,
+        "שירותים מיוחדים": 0.007198,
+        "גמלת ילד נכה": 0.014121,
+        "ניידות": 0.005347,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009716,
+        "נפגעי עבודה - דמי פגיעה": 0.000588,
+        "קצבת ילדים - מספר משפחות": 0.132005,
+        "קצבת ילדים - מספר ילדים": 0.296479,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.015451,
+        "דמי לידה": 0.000935,
+        "מזונות": 0.000725,
+        "הבטחת הכנסה": 0.00294,
+        "אבטלה": 0.009038
+      },
+      "pctDiff": {
+        "תושבים 0-17": -1.6,
+        "תושבים 18-64": -4.0,
+        "תושבים 65+": 19.7,
+        "זקנה ושאירים - כלל המקבלים": 21.8,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -79.3,
+        "זקנה ושאירים - קצבת זקנה בלבד": 24.8,
+        "גמלת סיעוד": -5.1,
+        "נכות כללית": 9.0,
+        "שירותים מיוחדים": -32.5,
+        "גמלת ילד נכה": -23.0,
+        "ניידות": -21.0,
+        "נפגעי עבודה - קצבת נכות ותלויים": -57.6,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -1.3,
+        "קצבת ילדים - מספר ילדים": -7.1,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -46.7,
+        "דמי לידה": 1.6,
+        "מזונות": null,
+        "הבטחת הכנסה": -42.6,
+        "אבטלה": 13.3
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "מרום הגליל",
+      "btlName": "מרום הגליל",
+      "cluster": 5,
+      "population": 15655,
+      "values": {
+        "תושבים 0-17": 0.349218,
+        "תושבים 18-64": 0.548195,
+        "תושבים 65+": 0.102587,
+        "זקנה ושאירים - כלל המקבלים": 0.097605,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.004791,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.09192,
+        "גמלת סיעוד": 0.022421,
+        "נכות כללית": 0.036474,
+        "שירותים מיוחדים": 0.007857,
+        "גמלת ילד נכה": 0.012328,
+        "ניידות": 0.00543,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.007027,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.127946,
+        "קצבת ילדים - מספר ילדים": 0.319195,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.025934,
+        "דמי לידה": 0.001214,
+        "מזונות": 0.00083,
+        "הבטחת הכנסה": 0.003641,
+        "אבטלה": 0.008751
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.314075,
+        "תושבים 18-64": 0.563333,
+        "תושבים 65+": 0.122592,
+        "זקנה ושאירים - כלל המקבלים": 0.117891,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.026734,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.107483,
+        "גמלת סיעוד": 0.043447,
+        "נכות כללית": 0.039778,
+        "שירותים מיוחדים": 0.01061,
+        "גמלת ילד נכה": 0.01506,
+        "ניידות": 0.00586,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008973,
+        "נפגעי עבודה - דמי פגיעה": 0.000842,
+        "קצבת ילדים - מספר משפחות": 0.131587,
+        "קצבת ילדים - מספר ילדים": 0.30605,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.019968,
+        "דמי לידה": 0.001232,
+        "מזונות": 0.001641,
+        "הבטחת הכנסה": 0.006526,
+        "אבטלה": 0.009434
+      },
+      "pctDiff": {
+        "תושבים 0-17": 11.2,
+        "תושבים 18-64": -2.7,
+        "תושבים 65+": -16.3,
+        "זקנה ושאירים - כלל המקבלים": -17.2,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -82.1,
+        "זקנה ושאירים - קצבת זקנה בלבד": -14.5,
+        "גמלת סיעוד": -48.4,
+        "נכות כללית": -8.3,
+        "שירותים מיוחדים": -25.9,
+        "גמלת ילד נכה": -18.1,
+        "ניידות": -7.3,
+        "נפגעי עבודה - קצבת נכות ותלויים": -21.7,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -2.8,
+        "קצבת ילדים - מספר ילדים": 4.3,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 29.9,
+        "דמי לידה": -1.5,
+        "מזונות": -49.4,
+        "הבטחת הכנסה": -44.2,
+        "אבטלה": -7.2
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "מטה אשר",
+      "btlName": "מטה אשר",
+      "cluster": 7,
+      "population": 30204,
+      "values": {
+        "תושבים 0-17": 0.322871,
+        "תושבים 18-64": 0.544034,
+        "תושבים 65+": 0.133095,
+        "זקנה ושאירים - כלל המקבלים": 0.127963,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.005628,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.122533,
+        "גמלת סיעוד": 0.025295,
+        "נכות כללית": 0.023639,
+        "שירותים מיוחדים": 0.005628,
+        "גמלת ילד נכה": 0.013376,
+        "ניידות": 0.004635,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008476,
+        "נפגעי עבודה - דמי פגיעה": 0.000629,
+        "קצבת ילדים - מספר משפחות": 0.137167,
+        "קצבת ילדים - מספר ילדים": 0.29367,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.011257,
+        "דמי לידה": 0.000861,
+        "מזונות": 0.00053,
+        "הבטחת הכנסה": 0.004039,
+        "אבטלה": 0.009469
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.308669,
+        "תושבים 18-64": 0.554947,
+        "תושבים 65+": 0.136384,
+        "זקנה ושאירים - כלל המקבלים": 0.127727,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012235,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.121997,
+        "גמלת סיעוד": 0.03398,
+        "נכות כללית": 0.028724,
+        "שירותים מיוחדים": 0.007198,
+        "גמלת ילד נכה": 0.014121,
+        "ניידות": 0.005347,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009716,
+        "נפגעי עבודה - דמי פגיעה": 0.000588,
+        "קצבת ילדים - מספר משפחות": 0.132005,
+        "קצבת ילדים - מספר ילדים": 0.296479,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.015451,
+        "דמי לידה": 0.000935,
+        "מזונות": 0.000725,
+        "הבטחת הכנסה": 0.00294,
+        "אבטלה": 0.009038
+      },
+      "pctDiff": {
+        "תושבים 0-17": 4.6,
+        "תושבים 18-64": -2.0,
+        "תושבים 65+": -2.4,
+        "זקנה ושאירים - כלל המקבלים": 0.2,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -54.0,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.4,
+        "גמלת סיעוד": -25.6,
+        "נכות כללית": -17.7,
+        "שירותים מיוחדים": -21.8,
+        "גמלת ילד נכה": -5.3,
+        "ניידות": -13.3,
+        "נפגעי עבודה - קצבת נכות ותלויים": -12.8,
+        "נפגעי עבודה - דמי פגיעה": 7.0,
+        "קצבת ילדים - מספר משפחות": 3.9,
+        "קצבת ילדים - מספר ילדים": -0.9,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -27.1,
+        "דמי לידה": -7.9,
+        "מזונות": -26.9,
+        "הבטחת הכנסה": 37.4,
+        "אבטלה": 4.8
+      }
+    },
+    {
+      "region": "גליל מערבי",
+      "targetName": "מעלה יוסף",
+      "btlName": "מעלה יוסף",
+      "cluster": 7,
+      "population": 11721,
+      "values": {
+        "תושבים 0-17": 0.301851,
+        "תושבים 18-64": 0.584506,
+        "תושבים 65+": 0.113642,
+        "זקנה ושאירים - כלל המקבלים": 0.106049,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.003583,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.102039,
+        "גמלת סיעוד": 0.013992,
+        "נכות כללית": 0.029861,
+        "שירותים מיוחדים": 0.007167,
+        "גמלת ילד נכה": 0.013309,
+        "ניידות": 0.006058,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.011347,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.12644,
+        "קצבת ילדים - מספר ילדים": 0.286153,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.015101,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.00401,
+        "אבטלה": 0.007679
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.308669,
+        "תושבים 18-64": 0.554947,
+        "תושבים 65+": 0.136384,
+        "זקנה ושאירים - כלל המקבלים": 0.127727,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012235,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.121997,
+        "גמלת סיעוד": 0.03398,
+        "נכות כללית": 0.028724,
+        "שירותים מיוחדים": 0.007198,
+        "גמלת ילד נכה": 0.014121,
+        "ניידות": 0.005347,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009716,
+        "נפגעי עבודה - דמי פגיעה": 0.000588,
+        "קצבת ילדים - מספר משפחות": 0.132005,
+        "קצבת ילדים - מספר ילדים": 0.296479,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.015451,
+        "דמי לידה": 0.000935,
+        "מזונות": 0.000725,
+        "הבטחת הכנסה": 0.00294,
+        "אבטלה": 0.009038
+      },
+      "pctDiff": {
+        "תושבים 0-17": -2.2,
+        "תושבים 18-64": 5.3,
+        "תושבים 65+": -16.7,
+        "זקנה ושאירים - כלל המקבלים": -17.0,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -70.7,
+        "זקנה ושאירים - קצבת זקנה בלבד": -16.4,
+        "גמלת סיעוד": -58.8,
+        "נכות כללית": 4.0,
+        "שירותים מיוחדים": -0.4,
+        "גמלת ילד נכה": -5.8,
+        "ניידות": 13.3,
+        "נפגעי עבודה - קצבת נכות ותלויים": 16.8,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -4.2,
+        "קצבת ילדים - מספר ילדים": -3.5,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -2.3,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 36.4,
+        "אבטלה": -15.0
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "מבואות חרמון",
+      "btlName": "מבואות החרמון",
+      "cluster": 7,
+      "population": 8012,
+      "values": {
+        "תושבים 0-17": 0.274214,
+        "תושבים 18-64": 0.585746,
+        "תושבים 65+": 0.14004,
+        "זקנה ושאירים - כלל המקבלים": 0.126061,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.002996,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.122441,
+        "גמלת סיעוד": 0.023839,
+        "נכות כללית": 0.033949,
+        "שירותים מיוחדים": 0.006116,
+        "גמלת ילד נכה": 0.013105,
+        "ניידות": 0.005741,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009735,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.115452,
+        "קצבת ילדים - מספר ילדים": 0.249376,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.010235,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.002122,
+        "אבטלה": 0.011233
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.308669,
+        "תושבים 18-64": 0.554947,
+        "תושבים 65+": 0.136384,
+        "זקנה ושאירים - כלל המקבלים": 0.127727,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012235,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.121997,
+        "גמלת סיעוד": 0.03398,
+        "נכות כללית": 0.028724,
+        "שירותים מיוחדים": 0.007198,
+        "גמלת ילד נכה": 0.014121,
+        "ניידות": 0.005347,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.009716,
+        "נפגעי עבודה - דמי פגיעה": 0.000588,
+        "קצבת ילדים - מספר משפחות": 0.132005,
+        "קצבת ילדים - מספר ילדים": 0.296479,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.015451,
+        "דמי לידה": 0.000935,
+        "מזונות": 0.000725,
+        "הבטחת הכנסה": 0.00294,
+        "אבטלה": 0.009038
+      },
+      "pctDiff": {
+        "תושבים 0-17": -11.2,
+        "תושבים 18-64": 5.5,
+        "תושבים 65+": 2.7,
+        "זקנה ושאירים - כלל המקבלים": -1.3,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -75.5,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.4,
+        "גמלת סיעוד": -29.8,
+        "נכות כללית": 18.2,
+        "שירותים מיוחדים": -15.0,
+        "גמלת ילד נכה": -7.2,
+        "ניידות": 7.4,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.2,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": -12.5,
+        "קצבת ילדים - מספר ילדים": -15.9,
+        "קצבת ילדים - משפחות עם 4+ ילדים": -33.8,
+        "דמי לידה": null,
+        "מזונות": null,
+        "הבטחת הכנסה": -27.8,
+        "אבטלה": 24.3
+      }
+    },
+    {
+      "region": "גליל מזרחי",
+      "targetName": "גולן",
+      "btlName": "גולן",
+      "cluster": 6,
+      "population": 20012,
+      "values": {
+        "תושבים 0-17": 0.396262,
+        "תושבים 18-64": 0.506996,
+        "תושבים 65+": 0.096742,
+        "זקנה ושאירים - כלל המקבלים": 0.087198,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.003298,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.08395,
+        "גמלת סיעוד": 0.010094,
+        "נכות כללית": 0.023586,
+        "שירותים מיוחדים": 0.004697,
+        "גמלת ילד נכה": 0.011593,
+        "ניידות": 0.004048,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.006196,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 0.137967,
+        "קצבת ילדים - מספר ילדים": 0.370228,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.03293,
+        "דמי לידה": 0.001249,
+        "מזונות": null,
+        "הבטחת הכנסה": 0.001549,
+        "אבטלה": 0.008545
+      },
+      "nationalAvg": {
+        "תושבים 0-17": 0.339082,
+        "תושבים 18-64": 0.536165,
+        "תושבים 65+": 0.124753,
+        "זקנה ושאירים - כלל המקבלים": 0.116714,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.017065,
+        "זקנה ושאירים - קצבת זקנה בלבד": 0.110478,
+        "גמלת סיעוד": 0.031051,
+        "נכות כללית": 0.031797,
+        "שירותים מיוחדים": 0.007687,
+        "גמלת ילד נכה": 0.015072,
+        "ניידות": 0.005038,
+        "נפגעי עבודה - קצבת נכות ותלויים": 0.008981,
+        "נפגעי עבודה - דמי פגיעה": 0.000694,
+        "קצבת ילדים - מספר משפחות": 0.132234,
+        "קצבת ילדים - מספר ילדים": 0.331594,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 0.026719,
+        "דמי לידה": 0.001395,
+        "מזונות": 0.001322,
+        "הבטחת הכנסה": 0.004558,
+        "אבטלה": 0.008581
+      },
+      "pctDiff": {
+        "תושבים 0-17": 16.9,
+        "תושבים 18-64": -5.4,
+        "תושבים 65+": -22.5,
+        "זקנה ושאירים - כלל המקבלים": -25.3,
+        "זקנה ושאירים - קצבה עם השלמת הכנסה": -80.7,
+        "זקנה ושאירים - קצבת זקנה בלבד": -24.0,
+        "גמלת סיעוד": -67.5,
+        "נכות כללית": -25.8,
+        "שירותים מיוחדים": -38.9,
+        "גמלת ילד נכה": -23.1,
+        "ניידות": -19.7,
+        "נפגעי עבודה - קצבת נכות ותלויים": -31.0,
+        "נפגעי עבודה - דמי פגיעה": null,
+        "קצבת ילדים - מספר משפחות": 4.3,
+        "קצבת ילדים - מספר ילדים": 11.7,
+        "קצבת ילדים - משפחות עם 4+ ילדים": 23.2,
+        "דמי לידה": -10.5,
+        "מזונות": null,
+        "הבטחת הכנסה": -66.0,
+        "אבטלה": -0.4
+      }
+    }
+  ],
+  "clusterAvg": {
+    "1": {
+      "תושבים 0-17": 0.525128,
+      "תושבים 18-64": 0.457018,
+      "תושבים 65+": 0.017854,
+      "זקנה ושאירים - כלל המקבלים": 0.020011,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.010501,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.012276,
+      "גמלת סיעוד": 0.00961,
+      "נכות כללית": 0.028929,
+      "שירותים מיוחדים": 0.008249,
+      "גמלת ילד נכה": 0.017195,
+      "ניידות": 0.004837,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.003675,
+      "נפגעי עבודה - דמי פגיעה": 0.000568,
+      "קצבת ילדים - מספר משפחות": 0.139758,
+      "קצבת ילדים - מספר ילדים": 0.493018,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.063441,
+      "דמי לידה": 0.001184,
+      "מזונות": 0.001804,
+      "הבטחת הכנסה": 0.023028,
+      "אבטלה": 0.004567
+    },
+    "2": {
+      "תושבים 0-17": 0.432547,
+      "תושבים 18-64": 0.512027,
+      "תושבים 65+": 0.055427,
+      "זקנה ושאירים - כלל המקבלים": 0.052702,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.010976,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.044964,
+      "גמלת סיעוד": 0.020584,
+      "נכות כללית": 0.040602,
+      "שירותים מיוחדים": 0.009399,
+      "גמלת ילד נכה": 0.019335,
+      "ניידות": 0.005172,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.005687,
+      "נפגעי עבודה - דמי פגיעה": 0.00074,
+      "קצבת ילדים - מספר משפחות": 0.140376,
+      "קצבת ילדים - מספר ילדים": 0.424789,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.045099,
+      "דמי לידה": 0.001916,
+      "מזונות": 0.001746,
+      "הבטחת הכנסה": 0.007373,
+      "אבטלה": 0.006784
+    },
+    "3": {
+      "תושבים 0-17": 0.323109,
+      "תושבים 18-64": 0.605733,
+      "תושבים 65+": 0.071157,
+      "זקנה ושאירים - כלל המקבלים": 0.067912,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021366,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.053225,
+      "גמלת סיעוד": 0.035516,
+      "נכות כללית": 0.047095,
+      "שירותים מיוחדים": 0.013748,
+      "גמלת ילד נכה": 0.012579,
+      "ניידות": 0.006583,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.009007,
+      "נפגעי עבודה - דמי פגיעה": 0.00123,
+      "קצבת ילדים - מספר משפחות": 0.140062,
+      "קצבת ילדים - מספר ילדים": 0.319069,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.01967,
+      "דמי לידה": 0.001068,
+      "מזונות": 0.001827,
+      "הבטחת הכנסה": 0.009333,
+      "אבטלה": 0.00918
+    },
+    "4": {
+      "תושבים 0-17": 0.320464,
+      "תושבים 18-64": 0.586191,
+      "תושבים 65+": 0.093344,
+      "זקנה ושאירים - כלל המקבלים": 0.089803,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.020161,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.078107,
+      "גמלת סיעוד": 0.038687,
+      "נכות כללית": 0.043003,
+      "שירותים מיוחדים": 0.011878,
+      "גמלת ילד נכה": 0.014616,
+      "ניידות": 0.006164,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.009623,
+      "נפגעי עבודה - דמי פגיעה": 0.001098,
+      "קצבת ילדים - מספר משפחות": 0.137567,
+      "קצבת ילדים - מספר ילדים": 0.318446,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.020566,
+      "דמי לידה": 0.001299,
+      "מזונות": 0.001887,
+      "הבטחת הכנסה": 0.008783,
+      "אבטלה": 0.009635
+    },
+    "5": {
+      "תושבים 0-17": 0.314075,
+      "תושבים 18-64": 0.563333,
+      "תושבים 65+": 0.122592,
+      "זקנה ושאירים - כלל המקבלים": 0.117891,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.026734,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.107483,
+      "גמלת סיעוד": 0.043447,
+      "נכות כללית": 0.039778,
+      "שירותים מיוחדים": 0.01061,
+      "גמלת ילד נכה": 0.01506,
+      "ניידות": 0.00586,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.008973,
+      "נפגעי עבודה - דמי פגיעה": 0.000842,
+      "קצבת ילדים - מספר משפחות": 0.131587,
+      "קצבת ילדים - מספר ילדים": 0.30605,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.019968,
+      "דמי לידה": 0.001232,
+      "מזונות": 0.001641,
+      "הבטחת הכנסה": 0.006526,
+      "אבטלה": 0.009434
+    },
+    "6": {
+      "תושבים 0-17": 0.339082,
+      "תושבים 18-64": 0.536165,
+      "תושבים 65+": 0.124753,
+      "זקנה ושאירים - כלל המקבלים": 0.116714,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.017065,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.110478,
+      "גמלת סיעוד": 0.031051,
+      "נכות כללית": 0.031797,
+      "שירותים מיוחדים": 0.007687,
+      "גמלת ילד נכה": 0.015072,
+      "ניידות": 0.005038,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.008981,
+      "נפגעי עבודה - דמי פגיעה": 0.000694,
+      "קצבת ילדים - מספר משפחות": 0.132234,
+      "קצבת ילדים - מספר ילדים": 0.331594,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.026719,
+      "דמי לידה": 0.001395,
+      "מזונות": 0.001322,
+      "הבטחת הכנסה": 0.004558,
+      "אבטלה": 0.008581
+    },
+    "7": {
+      "תושבים 0-17": 0.308669,
+      "תושבים 18-64": 0.554947,
+      "תושבים 65+": 0.136384,
+      "זקנה ושאירים - כלל המקבלים": 0.127727,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.012235,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.121997,
+      "גמלת סיעוד": 0.03398,
+      "נכות כללית": 0.028724,
+      "שירותים מיוחדים": 0.007198,
+      "גמלת ילד נכה": 0.014121,
+      "ניידות": 0.005347,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.009716,
+      "נפגעי עבודה - דמי פגיעה": 0.000588,
+      "קצבת ילדים - מספר משפחות": 0.132005,
+      "קצבת ילדים - מספר ילדים": 0.296479,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.015451,
+      "דמי לידה": 0.000935,
+      "מזונות": 0.000725,
+      "הבטחת הכנסה": 0.00294,
+      "אבטלה": 0.009038
+    },
+    "8": {
+      "תושבים 0-17": 0.300064,
+      "תושבים 18-64": 0.55483,
+      "תושבים 65+": 0.145106,
+      "זקנה ושאירים - כלל המקבלים": 0.134496,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.007104,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.129501,
+      "גמלת סיעוד": 0.026227,
+      "נכות כללית": 0.024304,
+      "שירותים מיוחדים": 0.00614,
+      "גמלת ילד נכה": 0.012306,
+      "ניידות": 0.00502,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.007588,
+      "נפגעי עבודה - דמי פגיעה": 0.000352,
+      "קצבת ילדים - מספר משפחות": 0.13412,
+      "קצבת ילדים - מספר ילדים": 0.290392,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.012255,
+      "דמי לידה": 0.000924,
+      "מזונות": 0.000354,
+      "הבטחת הכנסה": 0.001612,
+      "אבטלה": 0.008512
+    },
+    "9": {
+      "תושבים 0-17": 0.28514,
+      "תושבים 18-64": 0.560644,
+      "תושבים 65+": 0.154216,
+      "זקנה ושאירים - כלל המקבלים": 0.143209,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.005826,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.138458,
+      "גמלת סיעוד": 0.024836,
+      "נכות כללית": 0.019723,
+      "שירותים מיוחדים": 0.005323,
+      "גמלת ילד נכה": 0.011294,
+      "ניידות": 0.005239,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.008196,
+      "נפגעי עבודה - דמי פגיעה": 0.000258,
+      "קצבת ילדים - מספר משפחות": 0.129626,
+      "קצבת ילדים - מספר ילדים": 0.275527,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.009509,
+      "דמי לידה": 0.000774,
+      "מזונות": 0.000328,
+      "הבטחת הכנסה": 0.00125,
+      "אבטלה": 0.008204
+    },
+    "10": {
+      "תושבים 0-17": 0.25431,
+      "תושבים 18-64": 0.535201,
+      "תושבים 65+": 0.210489,
+      "זקנה ושאירים - כלל המקבלים": 0.179598,
+      "זקנה ושאירים - קצבה עם השלמת הכנסה": null,
+      "זקנה ושאירים - קצבת זקנה בלבד": 0.171695,
+      "גמלת סיעוד": 0.019157,
+      "נכות כללית": 0.012931,
+      "שירותים מיוחדים": 0.005747,
+      "גמלת ילד נכה": 0.006944,
+      "ניידות": 0.004789,
+      "נפגעי עבודה - קצבת נכות ותלויים": 0.002874,
+      "נפגעי עבודה - דמי פגיעה": null,
+      "קצבת ילדים - מספר משפחות": 0.105125,
+      "קצבת ילדים - מספר ילדים": 0.234435,
+      "קצבת ילדים - משפחות עם 4+ ילדים": 0.011734,
+      "דמי לידה": null,
+      "מזונות": null,
+      "הבטחת הכנסה": null,
+      "אבטלה": 0.002634
+    }
+  },
+  "nationalTotal": {
+    "תושבים 0-17": 0.324699,
+    "תושבים 18-64": 0.545607,
+    "תושבים 65+": 0.129695,
+    "זקנה ושאירים - כלל המקבלים": 0.123482,
+    "זקנה ושאירים - קצבה עם השלמת הכנסה": 0.021041,
+    "זקנה ושאירים - קצבת זקנה בלבד": 0.114534,
+    "גמלת סיעוד": 0.038421,
+    "נכות כללית": 0.035558,
+    "שירותים מיוחדים": 0.009144,
+    "גמלת ילד נכה": 0.015746,
+    "ניידות": 0.005379,
+    "נפגעי עבודה - קצבת נכות ותלויים": 0.008446,
+    "נפגעי עבודה - דמי פגיעה": 0.000604,
+    "קצבת ילדים - מספר משפחות": 0.131579,
+    "קצבת ילדים - מספר ילדים": 0.322458,
+    "קצבת ילדים - משפחות עם 4+ ילדים": 0.023451,
+    "דמי לידה": 0.00113,
+    "מזונות": 0.00112,
+    "הבטחת הכנסה": 0.005698,
+    "אבטלה": 0.00834
+  }
+};
+        
+        // Allowed Metrics
+        const ALLOWED_METRICS = [
+            'זקנה ושאירים - כלל המקבלים',
+            'זקנה ושאירים - קצבה עם השלמת הכנסה',
+            'זקנה ושאירים - קצבת זקנה בלבד',
+            'גמלת סיעוד',
+            'נכות כללית',
+            'שירותים מיוחדים',
+            'גמלת ילד נכה',
+            'ניידות',
+            'נפגעי עבודה - קצבת נכות ותלויים',
+            'נפגעי עבודה - דמי פגיעה',
+            'קצבת ילדים - מספר משפחות',
+            'קצבת ילדים - מספר ילדים',
+            'קצבת ילדים - משפחות עם 4+ ילדים',
+            'דמי לידה',
+            'מזונות',
+            'הבטחת הכנסה',
+            'אבטלה'
+        ];
+        
+        let currentView = 'cluster'; 
+        let chartInstance = null;
+        
+        const colors = {
+            blue: 'rgba(59, 130, 246, 0.7)',
+            blueBorder: 'rgb(59, 130, 246)',
+            green: 'rgba(16, 185, 129, 0.7)',
+            greenBorder: 'rgb(16, 185, 129)',
+            gray: 'rgba(100, 116, 139, 0.2)',
+            grayBorder: 'rgb(100, 116, 139)',
+            national: 'rgb(244, 63, 94)', 
+            clusterLine: '#1E293B', // Dark slate for the straight markers
+        };
+
+        function init() {
+            const benefitSelect = document.getElementById('benefit-select');
+            ALLOWED_METRICS.forEach(m => {
+                benefitSelect.add(new Option(m, m));
+            });
+            
+            // Populate initially based on current region
+            onRegionChange();
+        }
+
+        function onRegionChange() {
+            const regionFilter = document.getElementById('region-select').value;
+            const authSelect = document.getElementById('auth-select');
+            
+            // Clear current authorities
+            authSelect.innerHTML = '';
+            
+            // Filter and populate authorities
+            const filteredAuths = APP_DATA.authorities.filter(a => a.region === regionFilter);
+            filteredAuths.sort((a,b) => a.targetName.localeCompare(b.targetName)).forEach(a => {
+                authSelect.add(new Option(a.targetName, a.targetName));
+            });
+            
+            // Render specific view
+            if (currentView === 'cluster') {
+                renderClusterView();
+            } else {
+                renderAuthView();
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            // Manage UI states
+            document.getElementById('btn-cluster').classList.toggle('active', view === 'cluster');
+            document.getElementById('btn-auth').classList.toggle('active', view === 'auth');
+            
+            document.getElementById('filter-cluster-view').classList.toggle('hidden', view !== 'cluster');
+            document.getElementById('filter-auth-view').classList.toggle('hidden', view !== 'auth');
+            
+            // Trigger render wrapper
+            onRegionChange();
+        }
+
+        function destroyChart() {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+        }
+
+        // ----- Cluster View (תמונה אשכולית) -----
+        function renderClusterView() {
+            destroyChart();
+            const metric = document.getElementById('benefit-select').value;
+            const regionFilter = document.getElementById('region-select').value;
+            
+            let chartData = APP_DATA.authorities.filter(a => a.region === regionFilter);
+            
+            // Sort Descending!
+            chartData.sort((a, b) => ((b.values[metric] || 0) * 100) - ((a.values[metric] || 0) * 100));
+            
+            const labels = chartData.map(a => a.targetName);
+            const values = chartData.map(a => (a.values[metric] || 0) * 100); 
+            
+            const nationalAvgRaw = APP_DATA.nationalTotal[metric];
+            const nationalAvgPct = nationalAvgRaw ? (nationalAvgRaw * 100) : 0;
+            
+            document.getElementById('chart-title').innerText = "שיעור צרכני " + metric + " מסך התושבים (" + regionFilter + ")";
+            document.getElementById('chart-stat').innerText = 'סה"כ ממוצע ארצי: ' + nationalAvgPct.toFixed(1) + '%';
+
+            // Colors
+            const barColor = regionFilter.includes('מזרחי') ? colors.blue : colors.green;
+            const barBorder = regionFilter.includes('מזרחי') ? colors.blueBorder : colors.greenBorder;
+
+            const bgColors = chartData.map(a => barColor);
+            const borderColors = chartData.map(a => barBorder);
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            // Custom Plugin for the horizontal national dashed line
+            const horizontalLinePlugin = {
+                id: 'horizontalLine',
+                beforeDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    const yAxis = chart.scales.y;
+                    const xAxis = chart.scales.x;
+                    
+                    if (nationalAvgPct > 0 && yAxis.getPixelForValue(nationalAvgPct) > 0) {
+                        const yCoord = yAxis.getPixelForValue(nationalAvgPct);
+                        
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.moveTo(xAxis.left, yCoord);
+                        ctx.lineTo(xAxis.right, yCoord);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = colors.national;
+                        ctx.setLineDash([5, 5]);
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = colors.national;
+                        ctx.font = 'bold 12px Heebo';
+                        ctx.fillText('סה"כ ארצי ממוצע (' + nationalAvgPct.toFixed(1) + '%)', xAxis.right - 140, yCoord - 10);
+                        ctx.restore();
+                    }
+                }
+            };
+            
+            Chart.defaults.font.family = 'Heebo';
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: metric + ' (%)',
+                        data: values,
+                        backgroundColor: bgColors,
+                        borderColor: borderColors,
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                plugins: [horizontalLinePlugin],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'אחוז מהאוכלוסייה (%)' },
+                            grid: { color: colors.gray },
+                            // Add extra padding to the top so data labels don't get cut off
+                            suggestedMax: Math.max(...values, nationalAvgPct) * 1.15 
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y.toFixed(2) + '% מהאוכלוסייה';
+                                }
+                            },
+                            titleFont: { family: 'Heebo', size: 14 },
+                            bodyFont: { family: 'Heebo', size: 13 }
+                        }
+                    }
+                }
+            });
+            
+            buildTableCluster(labels, values, nationalAvgPct, metric);
+        }
+
+        // ----- Authority View (תמונה רשותית) -----
+        function renderAuthView() {
+            destroyChart();
+            const authName = document.getElementById('auth-select').value;
+            const regionFilter = document.getElementById('region-select').value;
+            const authority = APP_DATA.authorities.find(a => a.targetName === authName && a.region === regionFilter);
+            
+            if(!authority) return;
+            
+            document.getElementById('chart-title').innerText = authority.targetName + " (" + authority.region + ") - התפלגות כלל הקצבאות";
+            
+            let statText = "אשכול סוציו-אקונומי: " + (authority.cluster || 'לא מוגדר');
+            if(authority.population) statText += " | סך תושבים בסביבת רווחה: " + authority.population.toLocaleString();
+            document.getElementById('chart-stat').innerText = statText;
+            
+            let dataPairs = ALLOWED_METRICS.map(m => {
+                let authVal = (authority.values[m] || 0) * 100;
+                let clusterVal = 0;
+                if(authority.cluster && APP_DATA.clusterAvg[authority.cluster]) {
+                    clusterVal = (APP_DATA.clusterAvg[authority.cluster][m] || 0) * 100;
+                }
+                return { metric: m, authVal: authVal, clusterVal: clusterVal };
+            });
+
+            // Sort Descending by Authority Value!
+            dataPairs.sort((a, b) => b.authVal - a.authVal);
+
+            const labels = dataPairs.map(d => d.metric);
+            const authParams = dataPairs.map(d => d.authVal);
+            const clusterPcts = dataPairs.map(d => d.clusterVal);
+            
+            const barColor = authority.region.includes('מזרחי') ? colors.blue : colors.green;
+            const barBorder = authority.region.includes('מזרחי') ? colors.blueBorder : colors.greenBorder;
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar', // Mixed chart
+                data: {
+                    labels: labels,
+                    datasets: [
+                        // Unconnected straight lines by using showLine: false and 'line' pointStyle
+                        {
+                            type: 'line',
+                            label: 'ממוצע ארצי לאשכול ' + authority.cluster,
+                            data: clusterPcts,
+                            showLine: true, 
+                            stepped: 'middle', 
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            borderColor: colors.clusterLine,
+                            backgroundColor: 'transparent',
+                            datalabels: { display: false } // Don't show numeric text for the average marker
+                        },
+                        {
+                            type: 'bar',
+                            label: authority.targetName,
+                            data: authParams,
+                            backgroundColor: barColor,
+                            borderColor: barBorder,
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            datalabels: { display: false }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'אחוז מהאוכלוסייה (%)' },
+                            grid: { color: colors.gray },
+                            suggestedMax: Math.max(...authParams, ...clusterPcts) * 1.15
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: { font: { family: 'Heebo' }, usePointStyle: true }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + '%';
+                                }
+                            },
+                            titleFont: { family: 'Heebo', size: 14 },
+                            bodyFont: { family: 'Heebo', size: 13 }
+                        }
+                    }
+                }
+            });
+            
+            buildTableAuth(labels, authParams, clusterPcts, authority.cluster);
+        }
+
+        // ----- Data Table Rendering -----
+        function buildTableCluster(authorities, values, nationalAvgPct, metric) {
+            document.getElementById('data-table-wrapper').classList.remove('hidden');
+            document.getElementById('data-table-head').innerHTML = `
+                <tr>
+                    <th>מס'</th>
+                    <th>רשות</th>
+                    <th>${metric} (%)</th>
+                    <th>פער מהממוצע הארצי (%)</th>
+                </tr>
+            `;
+            let rows = '';
+            authorities.forEach((auth, idx) => {
+                let val = values[idx];
+                let diff = val - nationalAvgPct;
+                let colorClass = diff >= 0 ? 'style="color: var(--accent); font-weight: 500;"' : 'style="color: var(--national); font-weight: 500;"';
+                let diffText = (diff > 0 ? '+' : '') + diff.toFixed(2) + '%';
+                
+                rows += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td style="font-weight: 500;">${auth}</td>
+                        <td>${val.toFixed(2)}%</td>
+                        <td ${colorClass}>${diffText}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('data-table-body').innerHTML = rows;
+        }
+        
+        function buildTableAuth(metrics, authVals, clusterVals, clusterId) {
+            document.getElementById('data-table-wrapper').classList.remove('hidden');
+            document.getElementById('data-table-head').innerHTML = `
+                <tr>
+                    <th>מס'</th>
+                    <th>סוג קצבה</th>
+                    <th>שיעור ברשות (%)</th>
+                    <th>ממוצע אשכול ${clusterId} (%)</th>
+                    <th>פער מהאשכול (%)</th>
+                </tr>
+            `;
+            let rows = '';
+            metrics.forEach((m, idx) => {
+                let aVal = authVals[idx];
+                let cVal = clusterVals[idx];
+                let diff = aVal - cVal;
+                let colorClass = diff >= 0 ? 'style="color: var(--accent); font-weight: 500;"' : 'style="color: var(--national); font-weight: 500;"';
+                let diffText = (diff > 0 ? '+' : '') + diff.toFixed(2) + '%';
+                
+                rows += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td style="font-weight: 500;">${m}</td>
+                        <td>${aVal.toFixed(2)}%</td>
+                        <td>${cVal.toFixed(2)}%</td>
+                        <td ${colorClass}>${diffText}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('data-table-body').innerHTML = rows;
+        }
+        
+        // Add listener for data labels global config if needed, initialized on load
+        window.onload = init;
+    </script>
+</body>
+</html>
