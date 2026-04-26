@@ -14,12 +14,12 @@
 
     <style>
         :root {
-            --primary: #0F172A; /* Used for header/black theme matching the logo */
+            --primary: #003B6F; /* Primary Navy */
             --secondary: #3B82F6;
             --accent: #10B981;
             --bg: #F8FAFC;
             --card-bg: #FFFFFF;
-            --text-main: #334155;
+            --text-main: #4A4A4A; /* Deep Charcoal */
             --text-light: #64748B;
             --border: #E2E8F0;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -30,7 +30,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Heebo', sans-serif;
+            font-family: 'Avenir Next', 'Heebo', sans-serif;
         }
 
         body {
@@ -40,8 +40,8 @@
         }
 
         header {
-            background: #000000; /* Black to match logo */
-            color: white;
+            background: #FFFFFF;
+            color: var(--primary);
             padding: 2rem 0;
             box-shadow: var(--shadow);
             margin-bottom: 2rem;
@@ -201,6 +201,35 @@
             width: 100%;
         }
 
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .kpi-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--primary);
+            text-align: center;
+        }
+        
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333333; /* Text Black */
+            margin-bottom: 0.5rem;
+        }
+        
+        .kpi-label {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
         /* Table */
         .table-container {
             margin-top: 2rem;
@@ -216,7 +245,8 @@
         }
         
         thead {
-            background-color: #F8FAFC;
+            background-color: var(--primary);
+            color: white;
             border-bottom: 2px solid var(--border);
         }
         
@@ -227,7 +257,7 @@
         
         th {
             font-weight: 600;
-            color: var(--primary);
+            color: white;
         }
         
         tbody tr:hover {
@@ -310,7 +340,12 @@
                     <select id="auth-select" onchange="renderAuthView()"></select>
                 </div>
             </div>
+                </div>
+            </div>
         </div>
+        
+        <!-- KPI Cards Section -->
+        <div id="kpi-cards" class="kpi-grid fade-in hidden"></div>
 
         <div class="chart-card fade-in" style="animation-delay: 0.1s;">
             <div class="chart-header">
@@ -320,6 +355,11 @@
             
             <div class="canvas-container">
                 <canvas id="mainChart"></canvas>
+            </div>
+            
+            <div class="canvas-container hidden fade-in" id="radar-chart-container" style="margin-top: 3rem; height: 500px; padding-top: 2rem; border-top: 1px solid var(--border);">
+                <h3 style="text-align: center; color: var(--primary); margin-bottom: 1.5rem;">התפלגות קצבאות מול ממוצע אשכול (מבט היקפי)</h3>
+                <canvas id="radarChart"></canvas>
             </div>
             
             <!-- Raw Data Table -->
@@ -3183,9 +3223,6 @@
             'ניידות',
             'נפגעי עבודה - קצבת נכות ותלויים',
             'נפגעי עבודה - דמי פגיעה',
-            'קצבת ילדים - מספר משפחות',
-            'קצבת ילדים - מספר ילדים',
-            'קצבת ילדים - משפחות עם 4+ ילדים',
             'דמי לידה',
             'מזונות',
             'הבטחת הכנסה',
@@ -3194,6 +3231,7 @@
         
         let currentView = 'cluster'; 
         let chartInstance = null;
+        let radarInstance = null;
         
         const colors = {
             blue: 'rgba(59, 130, 246, 0.7)',
@@ -3246,6 +3284,7 @@
             
             document.getElementById('filter-cluster-view').classList.toggle('hidden', view !== 'cluster');
             document.getElementById('filter-auth-view').classList.toggle('hidden', view !== 'auth');
+            document.getElementById('radar-chart-container').classList.toggle('hidden', view !== 'auth');
             
             // Trigger render wrapper
             onRegionChange();
@@ -3255,6 +3294,51 @@
             if (chartInstance) {
                 chartInstance.destroy();
             }
+            if (radarInstance) {
+                radarInstance.destroy();
+            }
+        }
+
+        // ----- KPI Cards Rendering -----
+        function renderKPIs(authorities) {
+            const kpiContainer = document.getElementById('kpi-cards');
+            if (!authorities || authorities.length === 0) {
+                kpiContainer.classList.add('hidden');
+                return;
+            }
+            
+            const fields = [
+                { key: 'תושבים 0-17', label: 'תושבים 0-17' },
+                { key: 'תושבים 18-64', label: 'תושבים 18-64' },
+                { key: 'תושבים 65+', label: 'תושבים 65+' },
+                { key: 'קצבת ילדים - מספר משפחות', label: 'משפחות מקבלות קצבת ילדים' },
+                { key: 'קצבת ילדים - מספר ילדים', label: 'ילדים מקבלי קצבה' },
+                { key: 'קצבת ילדים - משפחות עם 4+ ילדים', label: 'משפחות עם 4+ ילדים' }
+            ];
+            
+            let sums = {};
+            fields.forEach(f => sums[f.key] = 0);
+            
+            authorities.forEach(a => {
+                let pop = a.population || 0;
+                fields.forEach(f => {
+                    let ratio = a.values[f.key] || 0;
+                    sums[f.key] += Math.round(ratio * pop);
+                });
+            });
+            
+            let html = '';
+            fields.forEach(f => {
+                html += `
+                    <div class="kpi-card">
+                        <div class="kpi-value">${sums[f.key].toLocaleString()}</div>
+                        <div class="kpi-label">${f.label}</div>
+                    </div>
+                `;
+            });
+            
+            kpiContainer.innerHTML = html;
+            kpiContainer.classList.remove('hidden');
         }
 
         // ----- Cluster View (תמונה אשכולית) -----
@@ -3264,6 +3348,9 @@
             const regionFilter = document.getElementById('region-select').value;
             
             let chartData = APP_DATA.authorities.filter(a => a.region === regionFilter);
+            
+            // Render KPI cards for the entire cluster
+            renderKPIs(chartData);
             
             // Sort Descending!
             chartData.sort((a, b) => ((b.values[metric] || 0) * 100) - ((a.values[metric] || 0) * 100));
@@ -3314,7 +3401,7 @@
                 }
             };
             
-            Chart.defaults.font.family = 'Heebo';
+            Chart.defaults.font.family = "'Avenir Next', 'Heebo', sans-serif";
             
             chartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -3371,7 +3458,10 @@
             
             if(!authority) return;
             
-            document.getElementById('chart-title').innerText = authority.targetName + " (" + authority.region + ") - התפלגות כלל הקצבאות";
+            // Render KPI cards for specific authority
+            renderKPIs([authority]);
+            
+            document.getElementById('chart-title').innerText = authority.targetName + " (" + authority.region + ") - התפלגות כלל הקצבאות בהשוואה לממוצע אשכול סוציו-אקונומי " + (authority.cluster || '');
             
             let statText = "אשכול סוציו-אקונומי: " + (authority.cluster || 'לא מוגדר');
             if(authority.population) statText += " | סך תושבים בסביבת רווחה: " + authority.population.toLocaleString();
@@ -3460,6 +3550,77 @@
                 }
             });
             
+            // --- Radar Chart Initialization ---
+            const ctxRadar = document.getElementById('radarChart').getContext('2d');
+            const radarAuthColor = authority.region.includes('מזרחי') ? 'rgba(59, 130, 246, 0.25)' : 'rgba(16, 185, 129, 0.25)';
+            const radarAuthBorder = authority.region.includes('מזרחי') ? colors.blueBorder : colors.greenBorder;
+            
+            radarInstance = new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: authority.targetName,
+                            data: authParams,
+                            backgroundColor: radarAuthColor,
+                            borderColor: radarAuthBorder,
+                            pointBackgroundColor: radarAuthBorder,
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: radarAuthBorder,
+                            borderWidth: 2,
+                        },
+                        {
+                            label: 'ממוצע ארצי לאשכול ' + authority.cluster,
+                            data: clusterPcts,
+                            backgroundColor: 'rgba(30, 41, 59, 0.05)',
+                            borderColor: colors.clusterLine,
+                            pointBackgroundColor: colors.clusterLine,
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: colors.clusterLine,
+                            borderWidth: 2,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: colors.gray },
+                            grid: { color: colors.gray },
+                            pointLabels: {
+                                font: { family: 'Heebo', size: 12, weight: '500' },
+                                color: '#334155'
+                            },
+                            ticks: {
+                                backdropColor: 'transparent',
+                                color: '#64748B'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { font: { family: 'Heebo' }, usePointStyle: true }
+                        },
+                        datalabels: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.r.toFixed(2) + '%';
+                                }
+                            },
+                            titleFont: { family: 'Heebo', size: 14 },
+                            bodyFont: { family: 'Heebo', size: 13 }
+                        }
+                    }
+                }
+            });
+            
             buildTableAuth(labels, authParams, clusterPcts, authority.cluster);
         }
 
@@ -3478,7 +3639,7 @@
             authorities.forEach((auth, idx) => {
                 let val = values[idx];
                 let diff = val - nationalAvgPct;
-                let colorClass = diff >= 0 ? 'style="color: var(--accent); font-weight: 500;"' : 'style="color: var(--national); font-weight: 500;"';
+                let colorClass = diff > 0 ? 'style="color: var(--national); font-weight: 500;"' : (diff < 0 ? 'style="color: var(--accent); font-weight: 500;"' : '');
                 let diffText = (diff > 0 ? '+' : '') + diff.toFixed(2) + '%';
                 
                 rows += `
@@ -3509,7 +3670,7 @@
                 let aVal = authVals[idx];
                 let cVal = clusterVals[idx];
                 let diff = aVal - cVal;
-                let colorClass = diff >= 0 ? 'style="color: var(--accent); font-weight: 500;"' : 'style="color: var(--national); font-weight: 500;"';
+                let colorClass = diff > 0 ? 'style="color: var(--national); font-weight: 500;"' : (diff < 0 ? 'style="color: var(--accent); font-weight: 500;"' : '');
                 let diffText = (diff > 0 ? '+' : '') + diff.toFixed(2) + '%';
                 
                 rows += `
